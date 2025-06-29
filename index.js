@@ -20,9 +20,16 @@ const formatTimeForTitle = (minutes, seconds) => {
     }
 };
 
-const updatePageTitle = (minutes, seconds, isWork, isCountdown) => {
-    if (isCountdown && isWork) {
-        document.title = `${formatTimeForTitle(minutes, seconds)} - Pomodoro Timer`;
+const updatePageTitle = (minutes, seconds, isWork, isCountdown, isPaused = false) => {
+    if (isPaused && isCountdown) {
+        const emoji = isWork ? "🔥" : "😴";
+        document.title = `${emoji} ⏸️ Paused - Pomodoro Timer`;
+    } else if (isCountdown) {
+        if (isWork) {
+            document.title = `🔥 ${formatTimeForTitle(minutes, seconds)} - Pomodoro Timer`;
+        } else {
+            document.title = `😴 ${formatTimeForTitle(minutes, seconds)} - Pomodoro Timer`;
+        }
     } else {
         document.title = "Pomodoro Timer";
     }
@@ -192,7 +199,7 @@ const app = createApp({
             currentRound.value = 1;
             
             // Reset page title
-            updatePageTitle(minutes.value, seconds.value, false, false);
+            updatePageTitle(minutes.value, seconds.value, false, false, false);
         };
 
         const countDownTimer = () => {
@@ -204,9 +211,9 @@ const app = createApp({
                     minutes.value = Math.trunc((newDate.value - nowDate.value) / 60) % 60;
                     seconds.value = (newDate.value - nowDate.value) % 60;
                     
-                    // Update page title if in work mode
+                    // Update page title based on current mode
                     const isWork = roundName.value === ROUND_NAMES[0];
-                    updatePageTitle(minutes.value, seconds.value, isWork, isCountdown.value);
+                    updatePageTitle(minutes.value, seconds.value, isWork, isCountdown.value, false);
                     
                     if (newDate.value - nowDate.value === 0) {
                         soundEffect(getSoundEffectType());
@@ -253,6 +260,7 @@ const app = createApp({
                 // Finished
                 clearInterval(timerInterval);
                 playState.value = true;
+                isCountdown.value = false;
                 if (!infinite.value) {
                     document.querySelectorAll("#rounds-container li").forEach(el => {
                         el.classList.remove("process");
@@ -261,6 +269,9 @@ const app = createApp({
                 }
                 timerBar.set(0);
                 if (musicPlaying.value) musicOn("");
+                
+                // Reset page title to default when all rounds are completed
+                document.title = "Pomodoro Timer";
                 return;
             }
             
@@ -315,7 +326,7 @@ const app = createApp({
             
             // Update page title based on current mode
             const isWork = roundName.value === ROUND_NAMES[0];
-            updatePageTitle(minutes.value, seconds.value, isWork, isCountdown.value);
+            updatePageTitle(minutes.value, seconds.value, isWork, isCountdown.value, false);
             
             if (currentRound.value === 1 || autoStart) {
                 timerBar.animate(0, { duration: (totalTime.value * 1000 + 10) });
@@ -360,13 +371,9 @@ const app = createApp({
                 timerBar.stop();
                 if (musicPlaying.value) musicOn("");
                 
-                // Update page title when paused (show "Paused" for work mode)
+                // Update page title when paused
                 const isWork = roundName.value === ROUND_NAMES[0];
-                if (isWork && isCountdown.value) {
-                    document.title = "⏸️ Paused - Pomodoro Timer";
-                } else {
-                    updatePageTitle(minutes.value, seconds.value, false, false);
-                }
+                updatePageTitle(minutes.value, seconds.value, isWork, isCountdown.value, true);
             }
         };
 
@@ -378,7 +385,23 @@ const app = createApp({
                 seconds.value = 0;
                 isCountdown.value = false;
                 currentRound.value++;
+                
+                // For manual fast forward, we want to force start the next round
+                // regardless of autoStart settings
+                const originalAutoStart = {
+                    pomodoro: autoPomodoro.value,
+                    break: autoBreak.value
+                };
+                
+                // Temporarily enable auto start for this transition
+                autoPomodoro.value = true;
+                autoBreak.value = true;
+                
                 startCountdown();
+                
+                // Restore original autoStart settings
+                autoPomodoro.value = originalAutoStart.pomodoro;
+                autoBreak.value = originalAutoStart.break;
             }
         };
 
