@@ -53,7 +53,7 @@
                 <h2>{{ timerFormat(minutes) }}<small>:{{ timerFormat(seconds) }}</small></h2>
                 
             </div>
-            <div id="rounds-container">
+            <div id="rounds-container" v-show="!infinite">
                 <ul>
                     <li v-for="i in parseInt(roundRange)" :key="i">•</li>
                 </ul>

@@ -162,10 +162,12 @@ const app = createApp({
             seconds.value = 0;
             playState.value = true;
             
-            // Reset round indicators
-            document.querySelectorAll("#rounds-container li").forEach(el => {
-                el.classList.remove("process", "active");
-            });
+            // Reset round indicators (only if not in infinite mode)
+            if (!infinite.value) {
+                document.querySelectorAll("#rounds-container li").forEach(el => {
+                    el.classList.remove("process", "active");
+                });
+            }
             
             isCountdown.value = false;
             isPaused.value = false;
@@ -198,11 +200,14 @@ const app = createApp({
         };
 
         const updateRoundIndicator = () => {
-            const roundIndex = Math.floor(currentRound.value / 2);
-            const roundEl = document.querySelector(`#rounds-container li:nth-child(${roundIndex})`);
-            if (roundEl) {
-                roundEl.classList.remove("process");
-                roundEl.classList.add("active");
+            // Only update round indicators if not in infinite mode
+            if (!infinite.value) {
+                const roundIndex = Math.floor(currentRound.value / 2);
+                const roundEl = document.querySelector(`#rounds-container li:nth-child(${roundIndex})`);
+                if (roundEl) {
+                    roundEl.classList.remove("process");
+                    roundEl.classList.add("active");
+                }
             }
         };
 
@@ -223,10 +228,12 @@ const app = createApp({
                 // Finished
                 clearInterval(timerInterval);
                 playState.value = true;
-                document.querySelectorAll("#rounds-container li").forEach(el => {
-                    el.classList.remove("process");
-                    el.classList.add("active");
-                });
+                if (!infinite.value) {
+                    document.querySelectorAll("#rounds-container li").forEach(el => {
+                        el.classList.remove("process");
+                        el.classList.add("active");
+                    });
+                }
                 timerBar.set(0);
                 if (musicPlaying.value) musicOn("");
                 return;
