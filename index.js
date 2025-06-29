@@ -221,6 +221,9 @@ const app = createApp({
             clearInterval(timerInterval);
             timerBar.set(1);
             
+            // Stop music if playing
+            if (musicPlaying.value) musicOn("");
+            
             minutes.value = workRange.value;
             seconds.value = 0;
             playState.value = true;
