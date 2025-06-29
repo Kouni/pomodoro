@@ -155,8 +155,12 @@
                     </div>
     
                     <div class="toggle-container">
-                        <p style="display: inline-block; vertical-align: middle;">Play music in breaks:</p>
-                        <input class="toggle" type="checkbox" v-model="musicInBreaks" />
+                        <p style="display: inline-block; vertical-align: middle;">Music timing:</p>
+                        <select v-model="musicTiming" style="margin-left: 10px;">
+                            <option value="work">Only during work</option>
+                            <option value="breaks">Only during breaks</option>
+                            <option value="both">During work and breaks</option>
+                        </select>
                     </div>
                     
                     <button class="default underline" @click="resetDefault('add')">Reset to Default</button>

@@ -68,7 +68,7 @@ const app = createApp({
         const autoBreak = ref(true);
         const autoTodoEmpty = ref(false);
         const infinite = ref(false);
-        const musicInBreaks = ref(false);
+        const musicTiming = ref("work"); // "work", "breaks", "both"
 
         // Audio state
         const musicPlaying = ref(false);
@@ -244,9 +244,11 @@ const app = createApp({
         };
 
         const handleMusicForBreak = () => {
-            if (!musicInBreaks.value) {
+            if (musicTiming.value === "work") {
+                // Only during work - stop music during breaks
                 if (musicPlaying.value) musicOn("");
-            } else {
+            } else if (musicTiming.value === "breaks" || musicTiming.value === "both") {
+                // During breaks or both - start music during breaks
                 if (isMusic.value && !musicPlaying.value) {
                     musicOn(musicPref.value);
                 }
@@ -312,7 +314,12 @@ const app = createApp({
                     const roundEl = document.querySelector(`#rounds-container li:nth-child(${(currentRound.value + 1) / 2})`);
                     if (roundEl) roundEl.classList.add("process");
                 }
-                if (isMusic.value && !musicPlaying.value) {
+                // Handle music for work mode
+                if (musicTiming.value === "breaks") {
+                    // Only during breaks - stop music during work
+                    if (musicPlaying.value) musicOn("");
+                } else if ((musicTiming.value === "work" || musicTiming.value === "both") && isMusic.value && !musicPlaying.value) {
+                    // During work or both - start music during work
                     musicOn(musicPref.value);
                 }
             }
@@ -347,7 +354,12 @@ const app = createApp({
                     timerBar.animate(0, { duration: ((newDate.value - nowDate.value) * 1000 + 10) });
                     
                     if (isMusic.value && !musicPlaying.value) {
-                        if (roundName.value === ROUND_NAMES[0] || musicInBreaks.value) {
+                        const isWork = roundName.value === ROUND_NAMES[0];
+                        const shouldPlayMusic = (
+                            (isWork && (musicTiming.value === "work" || musicTiming.value === "both")) ||
+                            (!isWork && (musicTiming.value === "breaks" || musicTiming.value === "both"))
+                        );
+                        if (shouldPlayMusic) {
                             musicOn(musicPref.value);
                         }
                     }
@@ -459,7 +471,7 @@ const app = createApp({
                 autoBreak.value = true;
                 autoTodoEmpty.value = false;
                 infinite.value = false;
-                musicInBreaks.value = false;
+                musicTiming.value = "work";
             }
         };
 
@@ -653,7 +665,7 @@ const app = createApp({
                 localStorage.setItem("autoBreak", autoBreak.value);
                 localStorage.setItem("autoTodoEmpty", autoTodoEmpty.value);
                 localStorage.setItem("infinite", infinite.value);
-                localStorage.setItem("musicInBreaks", musicInBreaks.value);
+                localStorage.setItem("musicTiming", musicTiming.value);
                 
                 if (!newTask.value.startsWith("Can't add more tasks...")) {
                     localStorage.setItem("newTask", newTask.value);
@@ -678,7 +690,18 @@ const app = createApp({
                 autoBreak.value = (localStorage.getItem("autoBreak") === "true");
                 autoTodoEmpty.value = (localStorage.getItem("autoTodoEmpty") === "true");
                 infinite.value = (localStorage.getItem("infinite") === "true");
-                musicInBreaks.value = (localStorage.getItem("musicInBreaks") === "true");
+                // Handle migration from old musicInBreaks to new musicTiming
+                const oldMusicInBreaks = localStorage.getItem("musicInBreaks");
+                const storedMusicTiming = localStorage.getItem("musicTiming");
+                if (storedMusicTiming) {
+                    musicTiming.value = storedMusicTiming;
+                } else if (oldMusicInBreaks !== null) {
+                    // Migrate from old format
+                    musicTiming.value = (oldMusicInBreaks === "true") ? "both" : "work";
+                    localStorage.removeItem("musicInBreaks"); // Clean up old setting
+                } else {
+                    musicTiming.value = "work"; // Default
+                }
                 
                 // Fix roundRange if it was set to 0 due to previous infinite mode bug
                 if (roundRange.value === 0) {
@@ -712,7 +735,7 @@ const app = createApp({
 
         // Watchers
         watch([roundRange, workRange, sBreakRange, lBreakRange, soundVolume, musicVolume, 
-               musicPref, isMusic, autoPomodoro, autoBreak, autoTodoEmpty, infinite, musicInBreaks,
+               musicPref, isMusic, autoPomodoro, autoBreak, autoTodoEmpty, infinite, musicTiming,
                newTask, tasks], 
               () => {
                   saveToStorage();
@@ -779,7 +802,7 @@ const app = createApp({
             autoBreak,
             autoTodoEmpty,
             infinite,
-            musicInBreaks,
+            musicTiming,
             changeCountdown,
             changeRound,
             changeInfinite,
