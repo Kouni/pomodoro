@@ -1,3 +1,4 @@
+// Light theme colors
 $gColor1: #F43147;
 $gColor2: #FF5744;
 $sliderB1: #0bdbfa;
@@ -10,6 +11,19 @@ $sliderY1: #ffd825;
 $sliderY2: #FFCB15;
 $sliderBr: #6d4730;
 $sliderP: #7C40FF;
+
+// Material Design Dark Theme Colors
+$dark-surface: #121212;
+$dark-surface-variant: #1e1e1e;
+$dark-surface-container: #232323;
+$dark-surface-container-high: #2d2d2d;
+$dark-primary: #bb86fc;
+$dark-primary-variant: #3700b3;
+$dark-secondary: #03dac6;
+$dark-on-surface: #e1e1e1;
+$dark-on-surface-variant: #a8a8a8;
+$dark-outline: #79747e;
+$dark-outline-variant: #49454f;
 
 h1, h2, h3, h4, h5, h6 { font-weight: 300; margin: 0; }
 p, span { font-weight: 100; }
@@ -837,5 +851,202 @@ html, body {
 		height: 12px;
 		width: 6px;
 		opacity: 1;
+	}
+}
+
+/*    DARK THEME    */
+
+#main-container.dark-theme {
+	background: linear-gradient(135deg, $dark-surface 0%, $dark-surface-variant 100%);
+	color: $dark-on-surface;
+	
+	#button-container button.button {
+		background-color: transparent !important;
+		color: #fff !important;
+		
+		img {
+			filter: brightness(0) invert(1) !important;
+		}
+	}
+	
+	.play {
+		border-left-color: #fff;
+	}
+	
+	.pause {
+		border-right-color: #fff;
+		border-left-color: #fff;
+	}
+}
+
+#main-container.dark-theme,
+.dark-theme {
+	#settings-container {
+		color: $dark-on-surface;
+		
+		.container {
+			background: $dark-surface-container;
+			color: $dark-on-surface;
+			
+			hr {
+				background: $dark-primary;
+			}
+			
+			#page-container {
+				> div {
+					color: $dark-on-surface;
+				}
+				
+				input.slider {
+					background: $dark-outline !important;
+					&::-webkit-slider-thumb {
+						background: $dark-primary !important;
+					}
+					&.disabled {
+						background: $dark-outline-variant !important;
+						&::-webkit-slider-thumb { 
+							background: $dark-on-surface-variant !important; 
+						}
+					}
+				}
+				
+				#time-page {
+					input.slider {
+						&:nth-of-type(1) { 
+							background: rgba($dark-secondary, 0.7) !important;
+							&::-webkit-slider-thumb { background: $dark-secondary !important; }
+						}
+						&:nth-of-type(2) { 
+							background: rgba($dark-primary, 0.7) !important;
+							&::-webkit-slider-thumb { background: $dark-primary !important; }
+						}
+						&:nth-of-type(3) { 
+							background: rgba($sliderG1, 0.7) !important;
+							&::-webkit-slider-thumb { background: $sliderG2 !important; }
+						}
+						&:nth-of-type(4) { 
+							background: rgba($sliderY1, 0.7) !important;
+							&::-webkit-slider-thumb { background: $sliderY2 !important; }
+						}
+					}
+				}
+				
+				button.default {
+					color: $dark-on-surface;
+					&:hover { color: $dark-primary; }
+				}
+				
+				span {
+					background-color: $dark-surface-container-high;
+					color: $dark-on-surface;
+				}
+				
+				input.toggle {
+					background-color: $dark-outline;
+					&:checked { background-color: $dark-primary; }
+				}
+				
+				#music_container {
+					button {
+						&:nth-of-type(1) { background-color: rgba($sliderG2, 0.8); }
+						&:nth-of-type(2) { background-color: rgba($sliderB2, 0.8); }
+						&:nth-of-type(3) { background-color: rgba($sliderBr, 0.8); }
+						&:nth-of-type(4) { background-color: rgba($sliderP, 0.8); }
+						&.disabled { background: $dark-outline-variant; }
+					}
+				}
+				
+				#audio_page {
+					input {
+						&:nth-of-type(2) { 
+							background: rgba($sliderY1, 0.7) !important;
+							&::-webkit-slider-thumb { background: $sliderY2 !important; }
+						}
+						&:nth-of-type(3) { 
+							background: rgba($dark-primary, 0.7) !important;
+							&::-webkit-slider-thumb { background: $dark-primary !important; }
+						}
+					}
+				}
+			}
+		}
+	}
+	
+	#todo-container {
+		color: $dark-on-surface;
+		
+		.container {
+			background: $dark-surface-container;
+			
+			#add-task-container {
+				background: $dark-surface-container;
+				border-top-color: $dark-outline;
+				
+				textarea {
+					background: $dark-surface-container;
+					color: $dark-on-surface;
+				}
+			}
+			
+			.task {
+				& + .task:after {
+					background: $dark-outline;
+				}
+				
+				.tick-container {
+					border-color: $dark-outline;
+					&.tick-complete {
+						border-color: $dark-secondary;
+					}
+				}
+				
+				.tick-container .tick:after {
+					border-right-color: $dark-secondary;
+					border-top-color: $dark-secondary;
+				}
+				
+				span {
+					color: $dark-on-surface;
+				}
+				
+				button {
+					color: $dark-on-surface-variant;
+					&:hover { color: $dark-on-surface; }
+				}
+			}
+		}
+		
+		button.button {
+			background-color: $dark-primary;
+			-webkit-box-shadow: 0 0 20px 0 rgba($dark-primary, 0.5);
+			box-shadow: 0 0 20px 0 rgba($dark-primary, 0.5);
+			&:hover {
+				-webkit-box-shadow: 0 0 24px 3px rgba($dark-primary, 0.5);
+				box-shadow: 0 0 24px 3px rgba($dark-primary, 0.5);
+			}
+		}
+	}
+	
+	button.button {
+		background-color: $dark-surface-container-high;
+		color: $dark-on-surface;
+		-webkit-box-shadow: 0 0 20px 0 rgba($dark-surface-container-high, 0.5);
+		box-shadow: 0 0 20px 0 rgba($dark-surface-container-high, 0.5);
+		&:hover {
+			-webkit-box-shadow: 0 0 24px 3px rgba($dark-surface-container-high, 0.5);
+			box-shadow: 0 0 24px 3px rgba($dark-surface-container-high, 0.5);
+		}
+	}
+	
+	// Timer buttons - needs to come after the general button.button rule
+	#main-container #button-container button.button,
+	#main-container #button-container button#restart,
+	#main-container #button-container button#play {
+		background-color: $dark-primary !important;
+		color: #fff !important;
+		
+		img {
+			filter: brightness(0) invert(1) !important;
+		}
 	}
 }
