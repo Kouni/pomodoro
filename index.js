@@ -686,6 +686,7 @@ const app = createApp({
                 soundVolume.value = parseInt(localStorage.getItem("soundVolume"));
                 musicVolume.value = parseInt(localStorage.getItem("musicVolume"));
                 musicPref.value = localStorage.getItem("musicPref");
+                isMusic.value = (localStorage.getItem("isMusic") === "true");
                 autoPomodoro.value = (localStorage.getItem("autoPomodoro") === "true");
                 autoBreak.value = (localStorage.getItem("autoBreak") === "true");
                 autoTodoEmpty.value = (localStorage.getItem("autoTodoEmpty") === "true");
@@ -749,6 +750,11 @@ const app = createApp({
             
             // Load settings and tasks
             loadFromStorage();
+            
+            // Initialize music UI state
+            nextTick(() => {
+                musicState();
+            });
             
             // Initialize todo container height
             updateTodoContainerHeight();
