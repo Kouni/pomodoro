@@ -351,15 +351,15 @@ const app = createApp({
         };
 
         const changeInfinite = () => {
-            if (!infinite.value) {
-                roundRange.value = 0;
+            if (infinite.value) {
+                // When enabling infinite mode, don't change roundRange value
+                // Just set appropriate totalRound for infinite cycles
                 currentRound.value = 1;
-                totalRound.value = 20;
+                totalRound.value = 999; // Use a large number for infinite mode
             } else {
-                roundRange.value = 4;
-                if (typeof(Storage) !== "undefined" && localStorage.getItem("roundRange") !== null) {
-                    roundRange.value = parseInt(localStorage.getItem("roundRange"));
-                } else {
+                // When disabling infinite mode, restore proper round behavior
+                if (roundRange.value === 0) {
+                    // If roundRange was 0, restore default value
                     roundRange.value = 4;
                 }
                 changeRound();
@@ -614,6 +614,18 @@ const app = createApp({
                 autoTodoEmpty.value = (localStorage.getItem("autoTodoEmpty") === "true");
                 infinite.value = (localStorage.getItem("infinite") === "true");
                 musicInBreaks.value = (localStorage.getItem("musicInBreaks") === "true");
+                
+                // Fix roundRange if it was set to 0 due to previous infinite mode bug
+                if (roundRange.value === 0) {
+                    roundRange.value = 4;
+                }
+                
+                // Set proper totalRound based on infinite mode
+                if (infinite.value) {
+                    totalRound.value = 999; // Large number for infinite mode
+                } else {
+                    totalRound.value = roundRange.value * 2;
+                }
                 
                 const storedNewTask = localStorage.getItem("newTask");
                 if (storedNewTask !== null) {
