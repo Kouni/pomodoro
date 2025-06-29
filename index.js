@@ -10,6 +10,24 @@ const timerFormat = (value) => {
     return value.toString().length === 1 ? "0" + value : value;
 };
 
+const formatTimeForTitle = (minutes, seconds) => {
+    if (minutes > 99) {
+        const hours = Math.floor(minutes / 60);
+        const mins = minutes % 60;
+        return `${timerFormat(hours)}:${timerFormat(mins)}:${timerFormat(seconds)}`;
+    } else {
+        return `${timerFormat(minutes)}:${timerFormat(seconds)}`;
+    }
+};
+
+const updatePageTitle = (minutes, seconds, isWork, isCountdown) => {
+    if (isCountdown && isWork) {
+        document.title = `${formatTimeForTitle(minutes, seconds)} - Pomodoro Timer`;
+    } else {
+        document.title = "Pomodoro Timer";
+    }
+};
+
 // Global state
 let timerBar;
 
@@ -33,7 +51,7 @@ const app = createApp({
         // Settings state
         const roundRange = ref(4);
         const workRange = ref(25);
-        const sBreakRange = ref(4);
+        const sBreakRange = ref(5);
         const lBreakRange = ref(15);
         const soundVolume = ref(100);
         const musicVolume = ref(75);
@@ -172,6 +190,9 @@ const app = createApp({
             isCountdown.value = false;
             isPaused.value = false;
             currentRound.value = 1;
+            
+            // Reset page title
+            updatePageTitle(minutes.value, seconds.value, false, false);
         };
 
         const countDownTimer = () => {
@@ -182,6 +203,10 @@ const app = createApp({
                     
                     minutes.value = Math.trunc((newDate.value - nowDate.value) / 60) % 60;
                     seconds.value = (newDate.value - nowDate.value) % 60;
+                    
+                    // Update page title if in work mode
+                    const isWork = roundName.value === ROUND_NAMES[0];
+                    updatePageTitle(minutes.value, seconds.value, isWork, isCountdown.value);
                     
                     if (newDate.value - nowDate.value === 0) {
                         soundEffect(getSoundEffectType());
@@ -288,6 +313,10 @@ const app = createApp({
             isCountdown.value = true;
             timerBar.set(1);
             
+            // Update page title based on current mode
+            const isWork = roundName.value === ROUND_NAMES[0];
+            updatePageTitle(minutes.value, seconds.value, isWork, isCountdown.value);
+            
             if (currentRound.value === 1 || autoStart) {
                 timerBar.animate(0, { duration: (totalTime.value * 1000 + 10) });
                 countDownTimer();
@@ -330,6 +359,14 @@ const app = createApp({
                 isPaused.value = true;
                 timerBar.stop();
                 if (musicPlaying.value) musicOn("");
+                
+                // Update page title when paused (show "Paused" for work mode)
+                const isWork = roundName.value === ROUND_NAMES[0];
+                if (isWork && isCountdown.value) {
+                    document.title = "⏸️ Paused - Pomodoro Timer";
+                } else {
+                    updatePageTitle(minutes.value, seconds.value, false, false);
+                }
             }
         };
 
@@ -377,7 +414,7 @@ const app = createApp({
             if (setting === "time") {
                 roundRange.value = 4;
                 workRange.value = minutes.value = 25;
-                sBreakRange.value = 4;
+                sBreakRange.value = 5;
                 lBreakRange.value = 15;
                 changeCountdown();
                 changeRound();
