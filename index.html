@@ -50,12 +50,12 @@
                     <path id="timer-path" fill-opacity="0" stroke-width="5" stroke="#FFFFFF" stroke-linecap="round" d=" M 732 556 C 661 506.5 690.25 374.5 793.125 376 C 896 377.5 921.5 504 852 556" />
                 </svg>
                 
-                <h2>{{ minutes | timerFormat }}<small>:{{ seconds | timerFormat }}</small></h2>
+                <h2>{{ timerFormat(minutes) }}<small>:{{ timerFormat(seconds) }}</small></h2>
                 
             </div>
             <div id="rounds-container">
                 <ul>
-                    <li v-for="i in parseInt(roundRange)">•</li>
+                    <li v-for="i in parseInt(roundRange)" :key="i">•</li>
                 </ul>
             </div>
     
@@ -91,15 +91,15 @@
             <div id="page-container">
                 <div id="time-page">
                     <p>Work</p>
-                    <span>{{ workRange | timerFormat }}:00</span><br>
+                    <span>{{ timerFormat(workRange) }}:00</span><br>
                     <input class="slider" type="range" min="1" max="60" value="25" v-model="workRange" @input="changeCountdown">
                     
                     <p>Short Break</p>
-                    <span>{{ sBreakRange | timerFormat }}:00</span><br>
+                    <span>{{ timerFormat(sBreakRange) }}:00</span><br>
                     <input class="slider" type="range" min="1" max="10" value="4" v-model="sBreakRange">
                     
                     <p>Long Break</p>
-                    <span>{{ lBreakRange | timerFormat }}:00</span><br>
+                    <span>{{ timerFormat(lBreakRange) }}:00</span><br>
                     <input class="slider" type="range" min="1" max="45" value="15" v-model="lBreakRange">
                     
                     <p>Rounds</p>
@@ -173,7 +173,7 @@
             <p v-if="Object.keys(tasks).length === 0">You have no tasks to complete</p>
             
             <div id="task-container">
-                <div class="task" v-for="(task, index) in tasks">
+                <div class="task" v-for="(task, index) in tasks" :key="index">
                     <div @click="completeTask(index)" class="tick-container"><div class="tick"></div></div>
                     <span :class="{priority: task.priority}">{{ task.text }}</span>
                     <span class="complete" :class="{priority: task.priority}">{{ task.text }}</span>
@@ -200,7 +200,7 @@
 
 
 <!--    JS LIBS    -->
-<script src="vue.min.js"></script>
+<script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
 <script src="progressbar.min.js"></script>
 
 <!--    MAIN JS    -->

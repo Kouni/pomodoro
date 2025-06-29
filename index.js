@@ -1,281 +1,121 @@
+const { createApp, ref, reactive, computed, watch, onMounted, nextTick } = Vue;
 
-let app = new Vue({
-    el: "#main-container",
-    data: {
-        roundName: "",
-        roundNameShort: "",
-        roundNames: ["Focus on work", "Take a short break", "Take a long break"],
-        roundNamesShort: ["Work", "Short break", "Long break"],
-        roundRange: 4,
-        workRange: 25,
-        sBreakRange: 4,
-        lBreakRange: 15,
-        currentRound: 1,
-        totalRound: 0,
-        nowDate: 0,
-        newDate: 0,
-        minutes: 25,
-        seconds: 0,
-        totalTime: 0,
-        playState: true,
-        isCountdown: false,
-        isPaused: false,
-        soundVolume: 100,
-        musicVolume: 75,
-        musicPref: "nature",
-        isMusic: false,
-        musicPlaying: false,
-        autoPomodoro: true,
-        autoBreak: true,
-        autoTodoEmpty: false,
-        infinite: false,
-        musicInBreaks: false,
-        newTask: "",
-        tasks: []
-    },
-    methods: {
-        changeCountdown: function() {
-            !this.isCountdown ? this.minutes = this.workRange : "";
-        },
-        changeRound: function() {
-            this.infinite = false;
-            this.totalRound = this.roundRange * 2;
-        },
-        changeVolume: function() {
-            Object.keys(music).forEach(function(key) {
-                music[key].volume = app.musicVolume / 100;
-            });
-        },
-        changeInfinite: function() {
-            if (!this.infinite) {
-                this.roundRange = 0;
-                this.currentRound = 1;
-                this.totalRound = 20;
-            } else {
-                this.roundRange = 4;
+// Constants
+const MAX_TASKS = 8;
+const ROUND_NAMES = ["Focus on work", "Take a short break", "Take a long break"];
+const ROUND_NAMES_SHORT = ["Work", "Short break", "Long break"];
 
-                if (typeof(Storage) !== "undefined" && localStorage.getItem("roundRange") !== null) {
-                    this.roundRange = localStorage.getItem("roundRange");
-                } else {
-                    this.roundRange = 4;
+// Utility functions
+const timerFormat = (value) => {
+    return value.toString().length === 1 ? "0" + value : value;
+};
+
+// Global state
+let timerBar;
+
+// Main Vue application
+const app = createApp({
+    setup() {
+        // Timer state
+        const minutes = ref(25);
+        const seconds = ref(0);
+        const isCountdown = ref(false);
+        const isPaused = ref(false);
+        const playState = ref(true);
+        const currentRound = ref(1);
+        const totalRound = ref(0);
+        const nowDate = ref(0);
+        const newDate = ref(0);
+        const totalTime = ref(0);
+        const roundName = ref("");
+        let timerInterval = null;
+
+        // Settings state
+        const roundRange = ref(4);
+        const workRange = ref(25);
+        const sBreakRange = ref(4);
+        const lBreakRange = ref(15);
+        const soundVolume = ref(100);
+        const musicVolume = ref(75);
+        const musicPref = ref("nature");
+        const isMusic = ref(false);
+        const autoPomodoro = ref(true);
+        const autoBreak = ref(true);
+        const autoTodoEmpty = ref(false);
+        const infinite = ref(false);
+        const musicInBreaks = ref(false);
+
+        // Audio state
+        const musicPlaying = ref(false);
+        const sound = {
+            "work": new Audio("assets/audio_break.mp3"),
+            "break": new Audio("assets/audio_work.mp3"),
+            "finish": new Audio("assets/audio_finish.mp3")
+        };
+        const music = {
+            "nature": new Audio("assets/audio_nature.mp3"),
+            "rain": new Audio("assets/audio_rain.mp3"),
+            "cafe": new Audio("assets/audio_cafe.mp3"),
+            "music": new Audio("assets/audio_music.mp3")
+        };
+
+        // Todo state
+        const newTask = ref("");
+        const tasks = ref([]);
+
+        // Computed properties
+        const shortRoundName = computed(() => {
+            for (let i = 0; i < ROUND_NAMES.length; i++) {
+                if (roundName.value === ROUND_NAMES[i]) {
+                    return ROUND_NAMES_SHORT[i];
                 }
-                this.changeRound();
             }
-        },
-        playFunc: function() {
-            this.playState = !this.playState;
-            if (document.querySelector("#button-container > #play > div").classList.contains("play")) {
-                if (this.isCountdown) {
-                    this.isPaused = false;
+            return "";
+        });
 
-                    this.nowDate = Math.trunc((new Date()).getTime() / 1000);
-                    this.newDate = this.nowDate + this.minutes * 60 + this.seconds;
-
-                    this.countDownTimer();
-                    timerBar.animate(0, {duration: ((this.newDate - this.nowDate) * 1000 + 10)});
-                    this.isMusic && !this.musicPlaying ? this.roundName === this.roundNames[0] || this.musicInBreaks ? this.musicOn(this.musicPref) : "" : "";
-                } else {
-                    this.currentRound = 1;
-                    if (!this.infinite) {
-                        [].forEach.call(document.querySelectorAll("#rounds-container li"), function (el) { el.classList.remove("active"); });
-                        this.totalRound = this.roundRange * 2;
-                    }
-                    this.startCountdown();
-                    this.isMusic && !this.musicPlaying ? this.musicOn(this.musicPref) : "";
-                }
-            } else {
-                this.isPaused = true;
-                timerBar.stop();
-                this.musicPlaying ? this.musicOn("") : "";
-            }
-        },
-        startCountdown: function() {
-            let autoStart = true;
-
-            if (this.currentRound > this.totalRound) {
-                // Finished
-                clearInterval(window.timer);
-                this.playState = true;
-                [].forEach.call(document.querySelectorAll("#rounds-container li"), function (el) { el.classList.remove("process"); });
-                [].forEach.call(document.querySelectorAll("#rounds-container li"), function (el) { el.classList.add("active"); });
-                timerBar.set(0);
-                this.musicPlaying ? this.musicOn("") : "";
-                return;
-            } else if (this.currentRound === this.totalRound) {
-                // Long break
-                this.autoBreak ? autoStart = true : autoStart = false;
-                if (this.infinite) {
-                    this.currentRound = 1;
-                    this.startCountdown();
-                    return;
-                } else {
-                    this.minutes = this.lBreakRange;
-                    this.totalTime = this.lBreakRange * 60;
-                    this.roundName = this.roundNames[2];
-                    document.querySelector("#rounds-container li:nth-child(" + this.currentRound / 2 + ")").classList.remove("process");
-                    document.querySelector("#rounds-container li:nth-child(" + this.currentRound / 2 + ")").classList.add("active");
-                    !this.musicInBreaks ? this.musicPlaying ? this.musicOn("") : "" : this.isMusic && !this.musicPlaying ? this.musicOn(this.musicPref) : "";
-                }
-            } else if (this.currentRound % 2 === 0) {
-                // Short break
-                this.autoBreak ? autoStart = true : autoStart = false;
-                this.minutes = this.sBreakRange;
-                this.totalTime = this.sBreakRange * 60;
-                this.roundName = this.roundNames[1];
-                if (!this.infinite) {
-                    document.querySelector("#rounds-container li:nth-child(" + this.currentRound / 2 + ")").classList.remove("process");
-                    document.querySelector("#rounds-container li:nth-child(" + this.currentRound / 2 + ")").classList.add("active");
-                }
-                !this.musicInBreaks ? this.musicPlaying ? this.musicOn("") : "" : "";
-            } else {
-                // Work
-                !this.autoTodoEmpty ? autoStart = this.autoPomodoro : autoStart = Object.keys(this.tasks).length > 0 && this.autoPomodoro;
-
-                this.minutes = this.workRange;
-                this.totalTime = this.workRange * 60;
-                this.roundName = this.roundNames[0];
-                if (!this.infinite) {
-                    document.querySelector("#rounds-container li:nth-child(" + (this.currentRound + 1) / 2 + ")").classList.add("process");
-                }
-                this.isMusic && !this.musicPlaying ? this.musicOn(this.musicPref) : "";
-            }
-
-            this.nowDate = Math.trunc((new Date()).getTime() / 1000);
-            this.newDate = this.nowDate + this.totalTime;
-
-            this.isCountdown = true;
-            timerBar.set(1);
-
-            if (this.currentRound === 1 || autoStart) {
-                timerBar.animate(0, {duration: (this.totalTime * 1000 + 10)});
-                this.countDownTimer();
-            } else {
-                this.playState = true;
-            }
-        },
-        countDownTimer: function() {
-            clearInterval(window.timer);
-            window.timer = setInterval(() => {
-                if (!this.isPaused) {
-                    this.nowDate = Math.trunc((new Date()).getTime() / 1000);
-
-                    this.minutes = Math.trunc((this.newDate - this.nowDate) / 60) % 60;
-                    this.seconds = (this.newDate - this.nowDate) % 60;
-
-                    this.newDate - this.nowDate === 0 ? (this.currentRound > this.totalRound ? this.soundEffect("finish") : this.currentRound === this.totalRound ? this.soundEffect("finish") : this.currentRound % 2 === 0 ? this.soundEffect("break") : this.soundEffect("work")) : "";
-                    if (this.newDate - this.nowDate < 0) {
-                        clearInterval(window.timer);
-
-                        this.minutes = 0;
-                        this.seconds = 0;
-
-                        this.isCountdown = false;
-                        this.currentRound++;
-
-                        this.startCountdown();
-                    }
-                }
-            },1000);
-        },
-        resetTimer: function() {
-            clearInterval(window.timer);
-            timerBar.set(1);
-
-            this.minutes = this.workRange;
-            this.seconds = 0;
-            this.playState = true;
-
-            [].forEach.call(document.querySelectorAll("#rounds-container li"), function (el) { el.classList.remove("process"); });
-            [].forEach.call(document.querySelectorAll("#rounds-container li"), function (el) { el.classList.remove("active"); });
-
-            this.isCountdown = false;
-            this.isPaused = false;
-            this.currentRound = 1;
-        },
-        fastForwardTimer: function() {
-            if (this.isCountdown) {
-                this.currentRound > this.totalRound ? this.soundEffect("finish") : this.currentRound === this.totalRound ? this.soundEffect("finish") : this.currentRound % 2 === 0 ? this.soundEffect("break") : this.soundEffect("work");
-                clearInterval(window.timer);
-
-                this.minutes = 0;
-                this.seconds = 0;
-
-                this.isCountdown = false;
-                this.currentRound++;
-
-                this.startCountdown();
-            }
-        },
-        soundEffect: function(fx) {
-            Object.keys(sound).forEach(function(key) {
+        // Audio methods
+        const soundEffect = (fx) => {
+            Object.keys(sound).forEach(key => {
                 sound[key].pause();
                 sound[key].currentTime = 0;
             });
-
-            sound[fx].volume = this.soundVolume / 100;
+            
+            sound[fx].volume = soundVolume.value / 100;
             sound[fx].play();
-        },
-        resetDefault: function(setting) {
-            if (setting === "time") {
-                this.roundRange = 4;
-                this.workRange = this.minutes = 25;
-                this.sBreakRange = 4;
-                this.lBreakRange = 15;
-                this.changeCountdown();
-                this.changeRound();
-            } else if (setting === "audio") {
-                this.isMusic = false;
-                this.soundVolume = 100;
-                this.musicVolume = 75;
-                document.querySelector("#music-slider").classList.add("disabled");
-                document.querySelector("#music-slider").disabled = true;
-                [].forEach.call(document.querySelectorAll("#music_container button"), function (el) { el.classList.add("disabled"); el.disabled = true; });
-                this.musicOn("");
-                this.musicPref = "nature";
-            } else {
-                this.autoPomodoro = true;
-                this.autoBreak = true;
-                this.autoTodoEmpty = false;
-                this.infinite = false;
-                this.musicInBreaks = false;
-            }
-        },
-        openTab: function(elem) {
-            if (elem === "settings") {
-                document.getElementsByClassName("overlay")[0].classList.add("opacBg");
-                document.querySelector("#settings-container .container").style.left = "20px";
-            } else {
-                document.getElementsByClassName("overlay")[1].classList.add("opacBg");
-                document.querySelector("#todo-container .container").style.right = "20px";
-            }
-        },
-        removeOverlay: function(elem) {
-            if (elem === "settings") {
-                document.getElementsByClassName("overlay")[0].classList.remove("opacBg");
-                document.querySelector("#settings-container .container").style.left = "-320px";
-            } else {
-                document.getElementsByClassName("overlay")[1].classList.remove("opacBg");
-                document.querySelector("#todo-container .container").style.right = "-350px";
-            }
-        },
-        musicState: function() {
-            if (this.isMusic) {
-                document.querySelector("#music-slider").classList.add("disabled");
-                document.querySelector("#music-slider").disabled = true;
-                [].forEach.call(document.querySelectorAll("#music_container button"), function (el) { el.classList.add("disabled"); el.disabled = true; });
+        };
 
-                this.musicOn("");
-            } else {
-                document.querySelector("#music-slider").classList.remove("disabled");
-                document.querySelector("#music-slider").disabled = false;
-                [].forEach.call(document.querySelectorAll("#music_container button"), function (el) { el.classList.remove("disabled"); el.disabled = false; });
+        const changeVolume = () => {
+            Object.keys(music).forEach(key => {
+                music[key].volume = musicVolume.value / 100;
+            });
+        };
 
-                this.musicOn(this.musicPref);
+        const musicState = () => {
+            const slider = document.querySelector("#music-slider");
+            const buttons = document.querySelectorAll("#music_container button");
+            
+            if (isMusic.value) {
+                slider.classList.add("disabled");
+                slider.disabled = true;
+                buttons.forEach(el => {
+                    el.classList.add("disabled");
+                    el.disabled = true;
+                });
+                musicOn("");
+            } else {
+                slider.classList.remove("disabled");
+                slider.disabled = false;
+                buttons.forEach(el => {
+                    el.classList.remove("disabled");
+                    el.disabled = false;
+                });
+                musicOn(musicPref.value);
             }
-        },
-        musicOn: function(fx) {
-            this.musicPlaying = false;
-            Object.keys(music).forEach(function(key) {
+        };
+
+        const musicOn = (fx) => {
+            musicPlaying.value = false;
+            Object.keys(music).forEach(key => {
                 music[key].pause();
                 music[key].currentTime = 0;
             });
@@ -283,255 +123,653 @@ let app = new Vue({
             if (fx === "") {
                 return;
             } else {
-                this.musicPref = fx;
+                musicPref.value = fx;
             }
 
-            this.musicPlaying = true;
-            music[this.musicPref].muted = false;
-            music[this.musicPref].play();
+            musicPlaying.value = true;
+            music[musicPref.value].muted = false;
+            music[musicPref.value].play();
 
             if (fx === "nature") {
-                music[this.musicPref].volume = 0;
+                music[musicPref.value].volume = 0;
                 let i = 0;
-                function volumeLoop() {
-                    setTimeout(function() {
+                const volumeLoop = () => {
+                    setTimeout(() => {
                         i++;
-                        music[app.musicPref].volume = i / 100;
-
-                        if (i < app.musicVolume) {
+                        music[musicPref.value].volume = i / 100;
+                        if (i < musicVolume.value) {
                             volumeLoop();
                         }
                     }, 30);
-                }
+                };
                 volumeLoop();
             }
-        },
-        settingsTabs: function(tab) {
-            if (tab === "time") {
-                document.querySelector("#settings-container .container hr").style.marginLeft = "0";
-                document.querySelector("#settings-container #page-container").style.marginLeft = "0";
-            } else if (tab === "audio") {
-                document.querySelector("#settings-container .container hr").style.marginLeft = "84px";
-                document.querySelector("#settings-container #page-container").style.marginLeft = "-100%";
-            } else {
-                document.querySelector("#settings-container .container hr").style.marginLeft = "168px";
-                document.querySelector("#settings-container #page-container").style.marginLeft = "-200%";
-            }
-        },
-        addTask: function() {
-            if (this.newTask.length <= 0) { return; }
-            if (Object.keys(this.tasks).length >= 8) {
-                document.querySelector("#todo-container #add-task-container textarea").disabled = true;
-                this.newTask = "Can't add more tasks...";
-                document.querySelector("#add-task-container textarea").classList.add("alert");
+        };
 
-                setTimeout(function() {
-                    app.newTask === "Can't add more tasks..." ? app.newTask = "" : "";
-                    document.querySelector("#add-task-container textarea").classList.remove("alert");
-                    document.querySelector("#todo-container #add-task-container textarea").disabled = false;
-                }, 3000);
+        // Timer methods
+        const getSoundEffectType = () => {
+            if (currentRound.value > totalRound.value || currentRound.value === totalRound.value) {
+                return "finish";
+            }
+            return currentRound.value % 2 === 0 ? "break" : "work";
+        };
+
+        const resetTimer = () => {
+            clearInterval(timerInterval);
+            timerBar.set(1);
+            
+            minutes.value = workRange.value;
+            seconds.value = 0;
+            playState.value = true;
+            
+            // Reset round indicators
+            document.querySelectorAll("#rounds-container li").forEach(el => {
+                el.classList.remove("process", "active");
+            });
+            
+            isCountdown.value = false;
+            isPaused.value = false;
+            currentRound.value = 1;
+        };
+
+        const countDownTimer = () => {
+            clearInterval(timerInterval);
+            timerInterval = setInterval(() => {
+                if (!isPaused.value) {
+                    nowDate.value = Math.trunc((new Date()).getTime() / 1000);
+                    
+                    minutes.value = Math.trunc((newDate.value - nowDate.value) / 60) % 60;
+                    seconds.value = (newDate.value - nowDate.value) % 60;
+                    
+                    if (newDate.value - nowDate.value === 0) {
+                        soundEffect(getSoundEffectType());
+                    }
+                    
+                    if (newDate.value - nowDate.value < 0) {
+                        clearInterval(timerInterval);
+                        minutes.value = 0;
+                        seconds.value = 0;
+                        isCountdown.value = false;
+                        currentRound.value++;
+                        startCountdown();
+                    }
+                }
+            }, 1000);
+        };
+
+        const updateRoundIndicator = () => {
+            const roundIndex = Math.floor(currentRound.value / 2);
+            const roundEl = document.querySelector(`#rounds-container li:nth-child(${roundIndex})`);
+            if (roundEl) {
+                roundEl.classList.remove("process");
+                roundEl.classList.add("active");
+            }
+        };
+
+        const handleMusicForBreak = () => {
+            if (!musicInBreaks.value) {
+                if (musicPlaying.value) musicOn("");
+            } else {
+                if (isMusic.value && !musicPlaying.value) {
+                    musicOn(musicPref.value);
+                }
+            }
+        };
+
+        const startCountdown = () => {
+            let autoStart = true;
+            
+            if (currentRound.value > totalRound.value) {
+                // Finished
+                clearInterval(timerInterval);
+                playState.value = true;
+                document.querySelectorAll("#rounds-container li").forEach(el => {
+                    el.classList.remove("process");
+                    el.classList.add("active");
+                });
+                timerBar.set(0);
+                if (musicPlaying.value) musicOn("");
+                return;
+            }
+            
+            if (currentRound.value === totalRound.value) {
+                // Long break
+                autoStart = autoBreak.value;
+                if (infinite.value) {
+                    currentRound.value = 1;
+                    startCountdown();
+                    return;
+                } else {
+                    minutes.value = lBreakRange.value;
+                    totalTime.value = lBreakRange.value * 60;
+                    roundName.value = ROUND_NAMES[2];
+                    updateRoundIndicator();
+                    handleMusicForBreak();
+                }
+            } else if (currentRound.value % 2 === 0) {
+                // Short break
+                autoStart = autoBreak.value;
+                minutes.value = sBreakRange.value;
+                totalTime.value = sBreakRange.value * 60;
+                roundName.value = ROUND_NAMES[1];
+                if (!infinite.value) {
+                    updateRoundIndicator();
+                }
+                if (!musicInBreaks.value && musicPlaying.value) {
+                    musicOn("");
+                }
+            } else {
+                // Work
+                autoStart = !autoTodoEmpty.value ? 
+                    autoPomodoro.value : 
+                    (Object.keys(tasks.value).length > 0 && autoPomodoro.value);
+                
+                minutes.value = workRange.value;
+                totalTime.value = workRange.value * 60;
+                roundName.value = ROUND_NAMES[0];
+                if (!infinite.value) {
+                    const roundEl = document.querySelector(`#rounds-container li:nth-child(${(currentRound.value + 1) / 2})`);
+                    if (roundEl) roundEl.classList.add("process");
+                }
+                if (isMusic.value && !musicPlaying.value) {
+                    musicOn(musicPref.value);
+                }
+            }
+            
+            nowDate.value = Math.trunc((new Date()).getTime() / 1000);
+            newDate.value = nowDate.value + totalTime.value;
+            isCountdown.value = true;
+            timerBar.set(1);
+            
+            if (currentRound.value === 1 || autoStart) {
+                timerBar.animate(0, { duration: (totalTime.value * 1000 + 10) });
+                countDownTimer();
+            } else {
+                playState.value = true;
+            }
+        };
+
+        const playFunc = () => {
+            playState.value = !playState.value;
+            const playBtn = document.querySelector("#button-container > #play > div");
+            
+            if (playBtn.classList.contains("play")) {
+                if (isCountdown.value) {
+                    isPaused.value = false;
+                    nowDate.value = Math.trunc((new Date()).getTime() / 1000);
+                    newDate.value = nowDate.value + minutes.value * 60 + seconds.value;
+                    countDownTimer();
+                    timerBar.animate(0, { duration: ((newDate.value - nowDate.value) * 1000 + 10) });
+                    
+                    if (isMusic.value && !musicPlaying.value) {
+                        if (roundName.value === ROUND_NAMES[0] || musicInBreaks.value) {
+                            musicOn(musicPref.value);
+                        }
+                    }
+                } else {
+                    currentRound.value = 1;
+                    if (!infinite.value) {
+                        document.querySelectorAll("#rounds-container li").forEach(el => {
+                            el.classList.remove("active");
+                        });
+                        totalRound.value = roundRange.value * 2;
+                    }
+                    startCountdown();
+                    if (isMusic.value && !musicPlaying.value) {
+                        musicOn(musicPref.value);
+                    }
+                }
+            } else {
+                isPaused.value = true;
+                timerBar.stop();
+                if (musicPlaying.value) musicOn("");
+            }
+        };
+
+        const fastForwardTimer = () => {
+            if (isCountdown.value) {
+                soundEffect(getSoundEffectType());
+                clearInterval(timerInterval);
+                minutes.value = 0;
+                seconds.value = 0;
+                isCountdown.value = false;
+                currentRound.value++;
+                startCountdown();
+            }
+        };
+
+        // Settings methods
+        const changeCountdown = () => {
+            if (!isCountdown.value) {
+                minutes.value = workRange.value;
+            }
+        };
+
+        const changeRound = () => {
+            infinite.value = false;
+            totalRound.value = roundRange.value * 2;
+        };
+
+        const changeInfinite = () => {
+            if (!infinite.value) {
+                roundRange.value = 0;
+                currentRound.value = 1;
+                totalRound.value = 20;
+            } else {
+                roundRange.value = 4;
+                if (typeof(Storage) !== "undefined" && localStorage.getItem("roundRange") !== null) {
+                    roundRange.value = parseInt(localStorage.getItem("roundRange"));
+                } else {
+                    roundRange.value = 4;
+                }
+                changeRound();
+            }
+        };
+
+        const resetDefault = (setting) => {
+            if (setting === "time") {
+                roundRange.value = 4;
+                workRange.value = minutes.value = 25;
+                sBreakRange.value = 4;
+                lBreakRange.value = 15;
+                changeCountdown();
+                changeRound();
+            } else if (setting === "audio") {
+                isMusic.value = false;
+                soundVolume.value = 100;
+                musicVolume.value = 75;
+                const slider = document.querySelector("#music-slider");
+                if (slider) {
+                    slider.classList.add("disabled");
+                    slider.disabled = true;
+                }
+                document.querySelectorAll("#music_container button").forEach(el => {
+                    el.classList.add("disabled");
+                    el.disabled = true;
+                });
+                musicOn("");
+                musicPref.value = "nature";
+            } else {
+                autoPomodoro.value = true;
+                autoBreak.value = true;
+                autoTodoEmpty.value = false;
+                infinite.value = false;
+                musicInBreaks.value = false;
+            }
+        };
+
+        // Todo methods
+        const addTask = () => {
+            if (newTask.value.length <= 0) return;
+            
+            if (tasks.value.length >= MAX_TASKS) {
+                const textarea = document.querySelector("#todo-container #add-task-container textarea");
+                if (textarea) {
+                    textarea.disabled = true;
+                    newTask.value = "Can't add more tasks...";
+                    textarea.classList.add("alert");
+
+                    setTimeout(() => {
+                        if (newTask.value === "Can't add more tasks...") {
+                            newTask.value = "";
+                        }
+                        textarea.classList.remove("alert");
+                        textarea.disabled = false;
+                    }, 3000);
+                }
                 return;
             }
 
             let isPriority = false;
-
-            if (this.newTask[0] === "!") {
-                this.newTask = this.newTask.substr(1);
+            if (newTask.value.length > 0 && newTask.value[0] === "!") {
+                newTask.value = newTask.value.substr(1);
                 isPriority = true;
             }
 
-            this.newTask = this.newTask.trim().replace(/\s+/g," ");
-            this.newTask = this.newTask.charAt(0).toUpperCase() + this.newTask.slice(1);
-            if (this.newTask.length <= 0) { return; }
+            newTask.value = newTask.value.trim().replace(/\s+/g, " ");
+            if (newTask.value.length > 0) {
+                newTask.value = newTask.value.charAt(0).toUpperCase() + newTask.value.slice(1);
+            }
+            
+            if (newTask.value.length <= 0) return;
 
-            this.tasks.push({
-                text: this.newTask,
+            tasks.value.push({
+                text: newTask.value,
                 completed: false,
                 priority: isPriority,
-            },);
+            });
 
-            this.newTask = "";
-            this.getStorage();
-            todoWindowMedia = window.matchMedia("(max-height: " + checkTodoHeight() + "px)");
-            adaptTodoContainer(todoWindowMedia);
-        },
-        removeTask: function(id) {
-            document.querySelector(".task:nth-child(" + (id + 1) + ")").classList.add("remove");
-            document.querySelector(".task:nth-child(" + (id + 1) + ") button").classList.add("remove");
+            newTask.value = "";
+            updateTodoContainerHeight();
+        };
 
-            setTimeout(function() {
-                [].forEach.call(document.querySelectorAll(".task"), function (el) { el.classList.remove("remove"); });
-                [].forEach.call(document.querySelectorAll(".task button"), function (el) { el.classList.remove("remove"); });
-                app.tasks.splice(id, 1);
+        const removeTask = (id) => {
+            const taskEl = document.querySelector(`.task:nth-child(${id + 1})`);
+            const buttonEl = document.querySelector(`.task:nth-child(${id + 1}) button`);
+            
+            if (taskEl) taskEl.classList.add("remove");
+            if (buttonEl) buttonEl.classList.add("remove");
 
-                for (let i = 0; i < app.tasks.length; i++) {
-                    app.tasks[i].completed = !app.tasks[i].completed;
-                    app.completeTask(i);
+            setTimeout(() => {
+                document.querySelectorAll(".task").forEach(el => el.classList.remove("remove"));
+                document.querySelectorAll(".task button").forEach(el => el.classList.remove("remove"));
+                tasks.value.splice(id, 1);
+
+                // Refresh task completion states
+                for (let i = 0; i < tasks.value.length; i++) {
+                    const wasCompleted = tasks.value[i].completed;
+                    tasks.value[i].completed = !tasks.value[i].completed;
+                    completeTask(i);
                 }
             }, 500);
-            this.getStorage();
-            todoWindowMedia = window.matchMedia("(max-height: " + checkTodoHeight() + "px)");
-            adaptTodoContainer(todoWindowMedia);
-        },
-        completeTask: function(id) {
-            this.tasks[id].completed = !this.tasks[id].completed;
+            
+            updateTodoContainerHeight();
+        };
 
-            if (this.tasks[id].completed) {
-                [].forEach.call(document.querySelectorAll(".task:nth-child(" + (id + 1) + ") span"), function (el) { el.classList.add("completed"); });
+        const completeTask = (id) => {
+            if (id >= tasks.value.length) return;
+            
+            tasks.value[id].completed = !tasks.value[id].completed;
+            
+            const taskEl = document.querySelector(`.task:nth-child(${id + 1})`);
+            if (!taskEl) return;
 
-                document.querySelector(".task:nth-child(" + (id + 1) + ") .tick-container").classList.add("tick-complete");
-                document.querySelector(".task:nth-child(" + (id + 1) + ") .tick-container .tick").classList.add("draw");
+            const spans = taskEl.querySelectorAll("span");
+            const tickContainer = taskEl.querySelector(".tick-container");
+            const tick = taskEl.querySelector(".tick-container .tick");
+
+            if (tasks.value[id].completed) {
+                spans.forEach(el => el.classList.add("completed"));
+                if (tickContainer) tickContainer.classList.add("tick-complete");
+                if (tick) tick.classList.add("draw");
             } else {
-                [].forEach.call(document.querySelectorAll(".task:nth-child(" + (id + 1) + ") span"), function (el) { el.classList.remove("completed"); });
-
-                document.querySelector(".task:nth-child(" + (id + 1) + ") .tick-container").classList.remove("tick-complete");
-                document.querySelector(".task:nth-child(" + (id + 1) + ") .tick-container .tick").classList.remove("draw");
+                spans.forEach(el => el.classList.remove("completed"));
+                if (tickContainer) tickContainer.classList.remove("tick-complete");
+                if (tick) tick.classList.remove("draw");
             }
-            this.getStorage();
-        },
-        getStorage: function() {
+        };
+
+        const updateTodoContainerHeight = () => {
+            const todoWindowMedia = window.matchMedia(`(max-height: ${checkTodoHeight()}px)`);
+            adaptTodoContainer(todoWindowMedia);
+        };
+
+        const checkTodoHeight = () => {
+            if (tasks.value.length === 0) {
+                return 101 + 40;
+            } else if (tasks.value.length === 1) {
+                return 130 + 40;
+            } else if (tasks.value.length > 1 && tasks.value.length <= 8) {
+                return 130 + (tasks.value.length - 1) * 65 + 40;
+            }
+        };
+
+        const adaptTodoContainer = (media) => {
+            const container = document.querySelector("#todo-container .container");
+            const taskContainer = document.querySelector("#todo-container .container #task-container");
+            
+            if (!container || !taskContainer) return;
+            
+            if (media.matches) {
+                container.style.top = "20px";
+                container.style.transform = "translateY(0)";
+                container.style.height = "calc(100% - 40px)";
+                taskContainer.style.overflowY = "scroll";
+                taskContainer.style.overflowX = "hidden";
+                taskContainer.style.height = "calc(100% - 50px)";
+            } else {
+                container.style.top = "50%";
+                container.style.transform = "translateY(-50%)";
+                container.style.height = "auto";
+                taskContainer.style.overflow = "hidden";
+                taskContainer.style.height = "auto";
+            }
+        };
+
+        // UI methods
+        const openTab = (elem) => {
+            if (elem === "settings") {
+                const overlay = document.getElementsByClassName("overlay")[0];
+                const container = document.querySelector("#settings-container .container");
+                if (overlay) overlay.classList.add("opacBg");
+                if (container) container.style.left = "20px";
+            } else {
+                const overlay = document.getElementsByClassName("overlay")[1];
+                const container = document.querySelector("#todo-container .container");
+                if (overlay) overlay.classList.add("opacBg");
+                if (container) container.style.right = "20px";
+            }
+        };
+
+        const removeOverlay = (elem) => {
+            if (elem === "settings") {
+                const overlay = document.getElementsByClassName("overlay")[0];
+                const container = document.querySelector("#settings-container .container");
+                if (overlay) overlay.classList.remove("opacBg");
+                if (container) container.style.left = "-320px";
+            } else {
+                const overlay = document.getElementsByClassName("overlay")[1];
+                const container = document.querySelector("#todo-container .container");
+                if (overlay) overlay.classList.remove("opacBg");
+                if (container) container.style.right = "-350px";
+            }
+        };
+
+        const settingsTabs = (tab) => {
+            const hr = document.querySelector("#settings-container .container hr");
+            const pageContainer = document.querySelector("#settings-container #page-container");
+            
+            if (!hr || !pageContainer) return;
+            
+            if (tab === "time") {
+                hr.style.marginLeft = "0";
+                pageContainer.style.marginLeft = "0";
+            } else if (tab === "audio") {
+                hr.style.marginLeft = "84px";
+                pageContainer.style.marginLeft = "-100%";
+            } else {
+                hr.style.marginLeft = "168px";
+                pageContainer.style.marginLeft = "-200%";
+            }
+        };
+
+        // Storage functions
+        const saveToStorage = () => {
             if (typeof(Storage) !== "undefined") {
-                localStorage.setItem("roundRange", this.roundRange);
-                localStorage.setItem("workRange", this.workRange);
-                localStorage.setItem("sBreakRange", this.sBreakRange);
-                localStorage.setItem("lBreakRange", this.lBreakRange);
-                localStorage.setItem("soundVolume", this.soundVolume);
-                localStorage.setItem("musicVolume", this.musicVolume);
-                localStorage.setItem("musicPref", this.musicPref);
-                localStorage.setItem("isMusic", this.isMusic);
-                localStorage.setItem("autoPomodoro", this.autoPomodoro);
-                localStorage.setItem("autoBreak", this.autoBreak);
-                localStorage.setItem("autoTodoEmpty", this.autoTodoEmpty);
-                localStorage.setItem("infinite", this.infinite);
-                localStorage.setItem("musicInBreaks", this.musicInBreaks);
-                if (!this.newTask.startsWith("Can't add more tasks...")) {
-                    localStorage.setItem("newTask", this.newTask);
+                localStorage.setItem("roundRange", roundRange.value);
+                localStorage.setItem("workRange", workRange.value);
+                localStorage.setItem("sBreakRange", sBreakRange.value);
+                localStorage.setItem("lBreakRange", lBreakRange.value);
+                localStorage.setItem("soundVolume", soundVolume.value);
+                localStorage.setItem("musicVolume", musicVolume.value);
+                localStorage.setItem("musicPref", musicPref.value);
+                localStorage.setItem("isMusic", isMusic.value);
+                localStorage.setItem("autoPomodoro", autoPomodoro.value);
+                localStorage.setItem("autoBreak", autoBreak.value);
+                localStorage.setItem("autoTodoEmpty", autoTodoEmpty.value);
+                localStorage.setItem("infinite", infinite.value);
+                localStorage.setItem("musicInBreaks", musicInBreaks.value);
+                
+                if (!newTask.value.startsWith("Can't add more tasks...")) {
+                    localStorage.setItem("newTask", newTask.value);
                 } else {
                     localStorage.setItem("newTask", "");
                 }
-                localStorage.setItem("tasks", JSON.stringify(this.tasks));
+                localStorage.setItem("tasks", JSON.stringify(tasks.value));
             }
-        },
-    },
-    filters: {
-        timerFormat: function(value) {
-            return value.toString().length === 1 ? "0" + value : value;
-        }
-    },
-    computed: {
-        shortRoundName: function() {
-            for (let i = 0; i < this.roundNames.length; i++) {
-                if (this.roundName === this.roundNames[i]) {
-                    return this.roundNamesShort[i];
+        };
+
+        const loadFromStorage = () => {
+            if (typeof(Storage) !== "undefined" && localStorage.getItem("roundRange") !== null) {
+                roundRange.value = parseInt(localStorage.getItem("roundRange"));
+                workRange.value = parseInt(localStorage.getItem("workRange"));
+                minutes.value = parseInt(localStorage.getItem("workRange"));
+                sBreakRange.value = parseInt(localStorage.getItem("sBreakRange"));
+                lBreakRange.value = parseInt(localStorage.getItem("lBreakRange"));
+                soundVolume.value = parseInt(localStorage.getItem("soundVolume"));
+                musicVolume.value = parseInt(localStorage.getItem("musicVolume"));
+                musicPref.value = localStorage.getItem("musicPref");
+                autoPomodoro.value = (localStorage.getItem("autoPomodoro") === "true");
+                autoBreak.value = (localStorage.getItem("autoBreak") === "true");
+                autoTodoEmpty.value = (localStorage.getItem("autoTodoEmpty") === "true");
+                infinite.value = (localStorage.getItem("infinite") === "true");
+                musicInBreaks.value = (localStorage.getItem("musicInBreaks") === "true");
+                
+                const storedNewTask = localStorage.getItem("newTask");
+                if (storedNewTask !== null) {
+                    newTask.value = storedNewTask;
                 }
+                
+                const storedTasks = localStorage.getItem("tasks");
+                if (storedTasks !== null) {
+                    try {
+                        tasks.value = JSON.parse(storedTasks) || [];
+                    } catch (e) {
+                        tasks.value = [];
+                    }
+                }
+            } else {
+                saveToStorage();
             }
-            return "";
-        }
-    },
-    watch: {
-        roundRange: { handler() { this.getStorage(); } },
-        workRange: { handler() { this.getStorage(); } },
-        sBreakRange: { handler() { this.getStorage(); } },
-        lBreakRange: { handler() { this.getStorage(); } },
-        soundVolume: { handler() { this.getStorage(); } },
-        musicVolume: { handler() { this.getStorage(); } },
-        musicPref: { handler() { this.getStorage(); } },
-        isMusic: { handler() { this.getStorage(); } },
-        autoPomodoro: { handler() { this.getStorage(); } },
-        autoBreak: { handler() { this.getStorage(); } },
-        autoTodoEmpty: { handler() { this.getStorage(); } },
-        infinite: { handler() { this.getStorage(); } },
-        musicInBreaks: { handler() { this.getStorage(); } },
-        newTask: { handler() { this.getStorage(); } },
-        tasks: { handler() { this.getStorage(); } },
-    },
-    mounted: function() {
-        if (typeof(Storage) !== "undefined") {
-            if (localStorage.getItem("roundRange") !== null) {
-                this.roundRange = localStorage.getItem("roundRange");
-                this.workRange = localStorage.getItem("workRange");
-                this.minutes = localStorage.getItem("workRange");
-                this.sBreakRange = localStorage.getItem("sBreakRange");
-                this.lBreakRange = localStorage.getItem("lBreakRange");
-                this.soundVolume = localStorage.getItem("soundVolume");
-                this.musicVolume = localStorage.getItem("musicVolume");
-                this.musicPref = localStorage.getItem("musicPref");
-                // Can't autoplay audio if user has not interacted with website first (HTML5 rule)
-                //this.isMusic = (localStorage.getItem("isMusic") === "true");
-                this.autoPomodoro = (localStorage.getItem("autoPomodoro") === "true");
-                this.autoBreak = (localStorage.getItem("autoBreak") === "true");
-                this.autoTodoEmpty = (localStorage.getItem("autoTodoEmpty") === "true");
-                this.infinite = (localStorage.getItem("infinite") === "true");
-                this.musicInBreaks = (localStorage.getItem("musicInBreaks") === "true");
-                this.newTask = localStorage.getItem("newTask");
-                this.tasks = JSON.parse(localStorage.getItem("tasks"));
+        };
 
-                for (let i = 0; i < this.tasks.length; i++) {
-                    if (this.tasks[i].completed) {
-                        setTimeout(function() {
-                            document.querySelector(".task:nth-child(" + (i + 1) + ") .tick-container").classList.add("tick-complete");
-                            document.querySelector(".task:nth-child(" + (i + 1) + ") .tick-container .tick").classList.add("draw");
+        // Watchers
+        watch([roundRange, workRange, sBreakRange, lBreakRange, soundVolume, musicVolume, 
+               musicPref, isMusic, autoPomodoro, autoBreak, autoTodoEmpty, infinite, musicInBreaks,
+               newTask, tasks], 
+              () => {
+                  saveToStorage();
+              }, { deep: true });
 
-                            [].forEach.call(document.querySelectorAll(".task:nth-child(" + (i + 1) + ") span"), function (el) { el.classList.toggle("completed"); });
+        // Lifecycle
+        onMounted(() => {
+            // Initialize progress bar
+            timerBar = new ProgressBar.Path('#timer-path');
+            timerBar.set(1);
+            
+            // Load settings and tasks
+            loadFromStorage();
+            
+            // Initialize todo container height
+            updateTodoContainerHeight();
+            
+            // Restore completed tasks visual state
+            nextTick(() => {
+                for (let i = 0; i < tasks.value.length; i++) {
+                    if (tasks.value[i].completed) {
+                        setTimeout(() => {
+                            const taskEl = document.querySelector(`.task:nth-child(${i + 1})`);
+                            if (taskEl) {
+                                const tickContainer = taskEl.querySelector(".tick-container");
+                                const tick = taskEl.querySelector(".tick-container .tick");
+                                const spans = taskEl.querySelectorAll("span");
+                                
+                                if (tickContainer) tickContainer.classList.add("tick-complete");
+                                if (tick) tick.classList.add("draw");
+                                spans.forEach(el => el.classList.add("completed"));
+                            }
                         }, 0);
                     }
                 }
-            } else { this.getStorage(); }
-        }
-    },
+            });
+        });
+
+        // Return reactive state and methods
+        return {
+            // Timer
+            minutes,
+            seconds,
+            isCountdown,
+            isPaused,
+            playState,
+            currentRound,
+            totalRound,
+            roundName,
+            resetTimer,
+            playFunc,
+            fastForwardTimer,
+            
+            // Settings
+            roundRange,
+            workRange,
+            sBreakRange,
+            lBreakRange,
+            soundVolume,
+            musicVolume,
+            musicPref,
+            isMusic,
+            autoPomodoro,
+            autoBreak,
+            autoTodoEmpty,
+            infinite,
+            musicInBreaks,
+            changeCountdown,
+            changeRound,
+            changeInfinite,
+            resetDefault,
+            
+            // Audio
+            changeVolume,
+            musicState,
+            musicOn,
+            
+            // Todos
+            newTask,
+            tasks,
+            addTask,
+            removeTask,
+            completeTask,
+            
+            // UI
+            openTab,
+            removeOverlay,
+            settingsTabs,
+            
+            // Computed
+            shortRoundName,
+            
+            // Utils
+            timerFormat
+        };
+    }
 });
 
-let timerBar = new ProgressBar.Path('#timer-path');
-timerBar.set(1);
+// Mount the app
+app.mount('#main-container');
 
-let sound = {
-    "work" : new Audio("assets/audio_break.mp3"),
-    "break" : new Audio("assets/audio_work.mp3"),
-    "finish" : new Audio("assets/audio_finish.mp3")
-};
-let music = {
-    "nature" : new Audio("assets/audio_nature.mp3"),
-    "rain" : new Audio("assets/audio_rain.mp3"),
-    "cafe" : new Audio("assets/audio_cafe.mp3"),
-    "music" : new Audio("assets/audio_music.mp3")
-};
-
-
-let todoWindowMedia = window.matchMedia("(max-height: " + checkTodoHeight() + "px)");
-function checkTodoHeight() {
-    if (app.tasks.length === 0) {
-        return 101 + 40;
-    } else if (app.tasks.length === 1) {
-        return 130 + 40;
-    } else if (app.tasks.length > 1 && app.tasks.length <= 8) {
-        return 130 + (app.tasks.length - 1) * 65 + 40;
+// Window event listeners
+window.addEventListener("load", () => {
+    const todoWindowMedia = window.matchMedia("(max-height: 180px)");
+    const container = document.querySelector("#todo-container .container");
+    const taskContainer = document.querySelector("#todo-container .container #task-container");
+    
+    if (todoWindowMedia.matches && container && taskContainer) {
+        container.style.top = "20px";
+        container.style.transform = "translateY(0)";
+        container.style.height = "calc(100% - 40px)";
+        taskContainer.style.overflowY = "scroll";
+        taskContainer.style.overflowX = "hidden";
+        taskContainer.style.height = "calc(100% - 50px)";
     }
-}
-function adaptTodoContainer(media) {
-    if (media.matches) {
-        let temp = document.querySelector("#todo-container .container").style;
-        temp.top = "20px";
-        temp.transform = "translateY(0)";
-        temp.height = "calc(100% - 40px)";
-
-        temp = document.querySelector("#todo-container .container #task-container").style;
-        temp.overflowY = "scroll";
-        temp.overflowX = "hidden";
-        temp.height = "calc(100% - 50px)";
-    } else {
-        let temp = document.querySelector("#todo-container .container").style;
-        temp.top = "50%";
-        temp.transform = "translateY(-50%)";
-        temp.height = "auto";
-
-        document.querySelector("#todo-container .container #task-container").style.overflow = "hidden";
-        document.querySelector("#todo-container .container #task-container").style.height = "auto";
-    }
-}
-
-window.addEventListener("load", function() {
-    adaptTodoContainer(todoWindowMedia);
 });
-window.addEventListener("resize", function() {
-    adaptTodoContainer(todoWindowMedia);
+
+window.addEventListener("resize", () => {
+    const todoWindowMedia = window.matchMedia("(max-height: 180px)");
+    const container = document.querySelector("#todo-container .container");
+    const taskContainer = document.querySelector("#todo-container .container #task-container");
+    
+    if (todoWindowMedia.matches && container && taskContainer) {
+        container.style.top = "20px";
+        container.style.transform = "translateY(0)";
+        container.style.height = "calc(100% - 40px)";
+        taskContainer.style.overflowY = "scroll";
+        taskContainer.style.overflowX = "hidden";
+        taskContainer.style.height = "calc(100% - 50px)";
+    } else if (container && taskContainer) {
+        container.style.top = "50%";
+        container.style.transform = "translateY(-50%)";
+        container.style.height = "auto";
+        taskContainer.style.overflow = "hidden";
+        taskContainer.style.height = "auto";
+    }
 });
