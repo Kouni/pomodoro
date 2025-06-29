@@ -142,6 +142,11 @@
                 
                 <div id="add_page">
                     <div class="toggle-container">
+                        <p style="display: inline-block; vertical-align: middle;">Dark Mode:</p>
+                        <input class="toggle" type="checkbox" v-model="darkMode" @change="toggleDarkMode" />
+                    </div>
+
+                    <div class="toggle-container">
                         <p style="display: inline-block; vertical-align: middle;">Auto-start pomodoros:</p>
                         <input class="toggle" type="checkbox" v-model="autoPomodoro" />
                     </div>

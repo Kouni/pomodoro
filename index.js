@@ -69,6 +69,7 @@ const app = createApp({
         const autoTodoEmpty = ref(false);
         const infinite = ref(false);
         const musicTiming = ref("work"); // "work", "breaks", "both"
+        const darkMode = ref(true);
 
         // Audio state
         const musicPlaying = ref(false);
@@ -477,6 +478,11 @@ const app = createApp({
             }
         };
 
+        const toggleDarkMode = () => {
+            console.log('Dark mode toggled:', darkMode.value);
+            // Dark mode is automatically saved via watcher
+        };
+
         const resetDefault = (setting) => {
             if (setting === "time") {
                 roundRange.value = 4;
@@ -515,6 +521,7 @@ const app = createApp({
                 autoTodoEmpty.value = false;
                 infinite.value = false;
                 musicTiming.value = "work";
+                darkMode.value = true;
             }
         };
 
@@ -709,6 +716,7 @@ const app = createApp({
                 localStorage.setItem("autoTodoEmpty", autoTodoEmpty.value);
                 localStorage.setItem("infinite", infinite.value);
                 localStorage.setItem("musicTiming", musicTiming.value);
+                localStorage.setItem("darkMode", darkMode.value);
                 
                 if (!newTask.value.startsWith("Can't add more tasks...")) {
                     localStorage.setItem("newTask", newTask.value);
@@ -747,6 +755,9 @@ const app = createApp({
                     musicTiming.value = "work"; // Default
                 }
                 
+                const storedDarkMode = localStorage.getItem("darkMode");
+                darkMode.value = storedDarkMode !== null ? (storedDarkMode === "true") : true;
+                
                 // Fix roundRange if it was set to 0 due to previous infinite mode bug
                 if (roundRange.value === 0) {
                     roundRange.value = 4;
@@ -780,10 +791,24 @@ const app = createApp({
         // Watchers
         watch([roundRange, workRange, sBreakRange, lBreakRange, soundVolume, musicVolume, 
                musicPref, isMusic, autoPomodoro, autoBreak, autoTodoEmpty, infinite, musicTiming,
-               newTask, tasks], 
+               darkMode, newTask, tasks], 
               () => {
                   saveToStorage();
               }, { deep: true });
+
+        // Watch for dark mode changes
+        watch(darkMode, (newValue) => {
+            console.log('Dark mode changed to:', newValue);
+            const mainContainer = document.querySelector('#main-container');
+            if (mainContainer) {
+                if (newValue) {
+                    mainContainer.classList.add('dark-theme');
+                } else {
+                    mainContainer.classList.remove('dark-theme');
+                }
+                console.log('Container classes:', mainContainer.className);
+            }
+        });
 
         // Watch for music timing changes to stop/start music accordingly
         watch(musicTiming, () => {
@@ -821,6 +846,14 @@ const app = createApp({
             // Initialize music UI state
             nextTick(() => {
                 musicState();
+                
+                // Apply dark mode if enabled
+                if (darkMode.value) {
+                    const mainContainer = document.querySelector('#main-container');
+                    if (mainContainer) {
+                        mainContainer.classList.add('dark-theme');
+                    }
+                }
             });
             
             // Initialize todo container height
@@ -876,9 +909,11 @@ const app = createApp({
             autoTodoEmpty,
             infinite,
             musicTiming,
+            darkMode,
             changeCountdown,
             changeRound,
             changeInfinite,
+            toggleDarkMode,
             resetDefault,
             
             // Audio
