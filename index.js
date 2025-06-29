@@ -120,14 +120,6 @@ const app = createApp({
             const buttons = document.querySelectorAll("#music_container button");
             
             if (isMusic.value) {
-                slider.classList.add("disabled");
-                slider.disabled = true;
-                buttons.forEach(el => {
-                    el.classList.add("disabled");
-                    el.disabled = true;
-                });
-                musicOn("");
-            } else {
                 slider.classList.remove("disabled");
                 slider.disabled = false;
                 buttons.forEach(el => {
@@ -135,6 +127,14 @@ const app = createApp({
                     el.disabled = false;
                 });
                 musicOn(musicPref.value);
+            } else {
+                slider.classList.add("disabled");
+                slider.disabled = true;
+                buttons.forEach(el => {
+                    el.classList.add("disabled");
+                    el.disabled = true;
+                });
+                musicOn("");
             }
         };
 
