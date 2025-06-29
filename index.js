@@ -118,6 +118,7 @@ const app = createApp({
         const musicState = () => {
             const slider = document.querySelector("#music-slider");
             const buttons = document.querySelectorAll("#music_container button");
+            const musicTiming = document.querySelector("#music-timing");
             
             if (isMusic.value) {
                 slider.classList.remove("disabled");
@@ -126,6 +127,13 @@ const app = createApp({
                     el.classList.remove("disabled");
                     el.disabled = false;
                 });
+                if (musicTiming) {
+                    musicTiming.classList.remove("disabled");
+                    musicTiming.disabled = false;
+                    musicTiming.style.backgroundColor = "#fff";
+                    musicTiming.style.color = "#141414";
+                    musicTiming.style.cursor = "pointer";
+                }
                 musicOn(musicPref.value);
             } else {
                 slider.classList.add("disabled");
@@ -134,6 +142,13 @@ const app = createApp({
                     el.classList.add("disabled");
                     el.disabled = true;
                 });
+                if (musicTiming) {
+                    musicTiming.classList.add("disabled");
+                    musicTiming.disabled = true;
+                    musicTiming.style.backgroundColor = "#a9a9a9";
+                    musicTiming.style.color = "#666";
+                    musicTiming.style.cursor = "default";
+                }
                 musicOn("");
             }
         };
@@ -455,10 +470,19 @@ const app = createApp({
                 isMusic.value = false;
                 soundVolume.value = 100;
                 musicVolume.value = 75;
+                musicTiming.value = "work";
                 const slider = document.querySelector("#music-slider");
+                const musicTimingEl = document.querySelector("#music-timing");
                 if (slider) {
                     slider.classList.add("disabled");
                     slider.disabled = true;
+                }
+                if (musicTimingEl) {
+                    musicTimingEl.classList.add("disabled");
+                    musicTimingEl.disabled = true;
+                    musicTimingEl.style.backgroundColor = "#a9a9a9";
+                    musicTimingEl.style.color = "#666";
+                    musicTimingEl.style.cursor = "default";
                 }
                 document.querySelectorAll("#music_container button").forEach(el => {
                     el.classList.add("disabled");

@@ -123,14 +123,21 @@
                     <span>{{ musicVolume }}%</span><br>
                     <input disabled id="music-slider" class="slider disabled" type="range" min="0" max="100" value="75" v-model="musicVolume" @input="changeVolume">
                     
-                    <div id="music_container">
-                        <button disabled class="disabled" @click="musicOn('nature')">Nature</button>
-                        <button disabled class="disabled" @click="musicOn('rain')">Rain</button>
-                        <button disabled class="disabled" @click="musicOn('cafe')">Café</button>
-                        <button disabled class="disabled" @click="musicOn('music')">Music</button>
+                    <div id="music_container" style="margin: 15px auto 0; width: 100%;">
+                        <button disabled class="disabled" @click="musicOn('nature')" style="width: 22%; margin: 0 1%; font-size: 12px; height: 35px;">Nature</button>
+                        <button disabled class="disabled" @click="musicOn('rain')" style="width: 22%; margin: 0 1%; font-size: 12px; height: 35px;">Rain</button>
+                        <button disabled class="disabled" @click="musicOn('cafe')" style="width: 22%; margin: 0 1%; font-size: 12px; height: 35px;">Café</button>
+                        <button disabled class="disabled" @click="musicOn('music')" style="width: 22%; margin: 0 1%; font-size: 12px; height: 35px;">Music</button>
                     </div>
                     
-                    <button class="default underline" @click="resetDefault('audio')">Reset to Default</button>
+                    <p style="margin: 15px auto 5px;">Music Timing</p>
+                    <select id="music-timing" disabled class="disabled" v-model="musicTiming" style="width: 70%; padding: 6px; border-radius: 5px; border: 1px solid #ccc; font-size: 13px; background: #fff; outline: none; color: #141414; margin-bottom: 10px;">
+                        <option value="work">Only during work</option>
+                        <option value="breaks">Only during breaks</option>
+                        <option value="both">During work and breaks</option>
+                    </select>
+                    
+                    <button class="default underline" @click="resetDefault('audio')" style="margin-top: 20px;">Reset to Default</button>
                 </div>
                 
                 <div id="add_page">
@@ -154,15 +161,6 @@
                         <input class="toggle" type="checkbox" v-model="infinite" @input="changeInfinite" />
                     </div>
     
-                    <div class="toggle-container">
-                        <p style="display: inline-block; vertical-align: middle;">Music timing:</p>
-                        <select v-model="musicTiming" style="margin-left: 10px;">
-                            <option value="work">Only during work</option>
-                            <option value="breaks">Only during breaks</option>
-                            <option value="both">During work and breaks</option>
-                        </select>
-                    </div>
-                    
                     <button class="default underline" @click="resetDefault('add')">Reset to Default</button>
                 </div>
             </div>
