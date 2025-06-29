@@ -134,7 +134,17 @@ const app = createApp({
                     musicTiming.style.color = "#141414";
                     musicTiming.style.cursor = "pointer";
                 }
-                musicOn(musicPref.value);
+                // Only start music if timing conditions are met
+                if (isCountdown.value) {
+                    const isWork = roundName.value === ROUND_NAMES[0];
+                    const shouldPlayMusic = (
+                        (isWork && (musicTiming.value === "work" || musicTiming.value === "both")) ||
+                        (!isWork && (musicTiming.value === "breaks" || musicTiming.value === "both"))
+                    );
+                    if (shouldPlayMusic) {
+                        musicOn(musicPref.value);
+                    }
+                }
             } else {
                 slider.classList.add("disabled");
                 slider.disabled = true;
@@ -164,6 +174,18 @@ const app = createApp({
                 return;
             } else {
                 musicPref.value = fx;
+            }
+
+            // Check if music should play based on timing settings
+            if (isCountdown.value) {
+                const isWork = roundName.value === ROUND_NAMES[0];
+                const shouldPlayMusic = (
+                    (isWork && (musicTiming.value === "work" || musicTiming.value === "both")) ||
+                    (!isWork && (musicTiming.value === "breaks" || musicTiming.value === "both"))
+                );
+                if (!shouldPlayMusic) {
+                    return; // Don't play music if timing conditions aren't met
+                }
             }
 
             musicPlaying.value = true;
@@ -387,9 +409,6 @@ const app = createApp({
                         totalRound.value = roundRange.value * 2;
                     }
                     startCountdown();
-                    if (isMusic.value && !musicPlaying.value) {
-                        musicOn(musicPref.value);
-                    }
                 }
             } else {
                 isPaused.value = true;
@@ -765,6 +784,30 @@ const app = createApp({
               () => {
                   saveToStorage();
               }, { deep: true });
+
+        // Watch for music timing changes to stop/start music accordingly
+        watch(musicTiming, () => {
+            if (isMusic.value) {
+                if (isCountdown.value) {
+                    const isWork = roundName.value === ROUND_NAMES[0];
+                    const shouldPlayMusic = (
+                        (isWork && (musicTiming.value === "work" || musicTiming.value === "both")) ||
+                        (!isWork && (musicTiming.value === "breaks" || musicTiming.value === "both"))
+                    );
+                    
+                    if (shouldPlayMusic && !musicPlaying.value) {
+                        musicOn(musicPref.value); // Start music if conditions are now met
+                    } else if (!shouldPlayMusic && musicPlaying.value) {
+                        musicOn(""); // Stop music if timing conditions no longer met
+                    }
+                } else {
+                    // If no timer is running, stop music if set to only play during breaks
+                    if (musicTiming.value === "breaks" && musicPlaying.value) {
+                        musicOn(""); // Stop music if only supposed to play during breaks
+                    }
+                }
+            }
+        });
 
         // Lifecycle
         onMounted(() => {
