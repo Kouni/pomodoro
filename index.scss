@@ -141,6 +141,10 @@ html, body {
 	user-select: none;
 }
 
+[v-cloak] {
+	display: none;
+}
+
 
 #main-container {
 	position: relative;
