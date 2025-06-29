@@ -298,9 +298,7 @@ const app = createApp({
                 if (!infinite.value) {
                     updateRoundIndicator();
                 }
-                if (!musicInBreaks.value && musicPlaying.value) {
-                    musicOn("");
-                }
+                handleMusicForBreak();
             } else {
                 // Work
                 autoStart = !autoTodoEmpty.value ? 
