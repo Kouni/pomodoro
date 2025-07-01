@@ -116,9 +116,38 @@ const app = createApp({
             }
 
             if (Notification.permission !== "denied") {
-                const permission = await Notification.requestPermission();
-                notificationPermission.value = permission;
-                return permission === "granted";
+                try {
+                    // For Chrome/Brave compatibility, ensure we handle the permission request properly
+                    const permission = await Notification.requestPermission();
+                    notificationPermission.value = permission;
+                    
+                    // Test notification to ensure it works in Chrome/Brave
+                    if (permission === "granted") {
+                        try {
+                            const testNotification = new Notification("Pomodoro Timer", {
+                                body: "Notifications enabled successfully!",
+                                icon: "assets/favicon/favicon-32x32.png",
+                                tag: "test-notification",
+                                silent: false
+                            });
+                            
+                            setTimeout(() => {
+                                try {
+                                    testNotification.close();
+                                } catch (e) {
+                                    // Ignore errors
+                                }
+                            }, 3000);
+                        } catch (e) {
+                            console.warn("Test notification failed:", e);
+                        }
+                    }
+                    
+                    return permission === "granted";
+                } catch (error) {
+                    console.error("Error requesting notification permission:", error);
+                    return false;
+                }
             }
 
             return false;
@@ -130,12 +159,14 @@ const app = createApp({
             }
 
             try {
+                // Simplified notification options for better Chrome/Brave compatibility
                 const notification = new Notification(title, {
                     body: message,
                     icon: icon,
-                    badge: "assets/favicon/favicon-32x32.png",
                     tag: "pomodoro-timer",
-                    requireInteraction: true
+                    silent: false,
+                    // Remove requireInteraction for Chrome compatibility
+                    // requireInteraction: true
                 });
 
                 notification.onclick = () => {
@@ -143,10 +174,14 @@ const app = createApp({
                     notification.close();
                 };
 
-                // Auto close notification after 10 seconds
+                // Auto close notification after 8 seconds for better UX
                 setTimeout(() => {
-                    notification.close();
-                }, 10000);
+                    try {
+                        notification.close();
+                    } catch (e) {
+                        // Ignore errors when closing notifications
+                    }
+                }, 8000);
             } catch (error) {
                 console.error("Failed to show notification:", error);
             }
