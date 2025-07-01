@@ -188,7 +188,7 @@ const app = createApp({
         };
 
         // Audio methods
-        const soundEffect = (fx, showNotification = true) => {
+        const soundEffect = (fx, enableNotificationSound = true) => {
             Object.keys(sound).forEach(key => {
                 sound[key].pause();
                 sound[key].currentTime = 0;
@@ -198,7 +198,7 @@ const app = createApp({
             sound[fx].play();
 
             // Show notification based on timer state (only if showNotification is true)
-            if (showNotification && enableNotifications.value && notificationPermission.value === "granted") {
+            if (enableNotificationSound && enableNotifications.value && notificationPermission.value === "granted") {
                 let title, message;
                 
                 if (fx === "finish") {
