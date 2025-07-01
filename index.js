@@ -85,6 +85,10 @@ const app = createApp({
             "music": new Audio("assets/audio_music.mp3")
         };
 
+        // Notification state
+        const notificationPermission = ref(Notification.permission);
+        const enableNotifications = ref(true);
+
         // Todo state
         const newTask = ref("");
         const tasks = ref([]);
@@ -99,6 +103,55 @@ const app = createApp({
             return "";
         });
 
+        // Notification methods
+        const requestNotificationPermission = async () => {
+            if (!("Notification" in window)) {
+                console.log("This browser does not support notifications");
+                return false;
+            }
+
+            if (Notification.permission === "granted") {
+                notificationPermission.value = "granted";
+                return true;
+            }
+
+            if (Notification.permission !== "denied") {
+                const permission = await Notification.requestPermission();
+                notificationPermission.value = permission;
+                return permission === "granted";
+            }
+
+            return false;
+        };
+
+        const showNotification = (title, message, icon = "assets/favicon/favicon-32x32.png") => {
+            if (!enableNotifications.value || notificationPermission.value !== "granted") {
+                return;
+            }
+
+            try {
+                const notification = new Notification(title, {
+                    body: message,
+                    icon: icon,
+                    badge: "assets/favicon/favicon-32x32.png",
+                    tag: "pomodoro-timer",
+                    requireInteraction: true
+                });
+
+                notification.onclick = () => {
+                    window.focus();
+                    notification.close();
+                };
+
+                // Auto close notification after 10 seconds
+                setTimeout(() => {
+                    notification.close();
+                }, 10000);
+            } catch (error) {
+                console.error("Failed to show notification:", error);
+            }
+        };
+
         // Audio methods
         const soundEffect = (fx) => {
             Object.keys(sound).forEach(key => {
@@ -108,6 +161,24 @@ const app = createApp({
             
             sound[fx].volume = soundVolume.value / 100;
             sound[fx].play();
+
+            // Show notification based on timer state
+            if (enableNotifications.value && notificationPermission.value === "granted") {
+                let title, message;
+                
+                if (fx === "finish") {
+                    title = "Pomodoro Session Complete!";
+                    message = "All rounds completed. Great job!";
+                } else if (fx === "work") {
+                    title = "Break Time!";
+                    message = "Time to take a well-deserved break.";
+                } else if (fx === "break") {
+                    title = "Work Time!";
+                    message = "Break's over. Time to focus and get productive!";
+                }
+                
+                showNotification(title, message);
+            }
         };
 
         const changeVolume = () => {
@@ -486,6 +557,16 @@ const app = createApp({
             // Dark mode is automatically saved via watcher
         };
 
+        const handleNotificationToggle = async () => {
+            if (enableNotifications.value) {
+                const granted = await requestNotificationPermission();
+                if (!granted) {
+                    enableNotifications.value = false;
+                    console.log('Notification permission denied');
+                }
+            }
+        };
+
         const resetDefault = (setting) => {
             if (setting === "time") {
                 roundRange.value = 4;
@@ -525,6 +606,7 @@ const app = createApp({
                 infinite.value = false;
                 musicTiming.value = "work";
                 darkMode.value = true;
+                enableNotifications.value = true;
             }
         };
 
@@ -720,6 +802,7 @@ const app = createApp({
                 localStorage.setItem("infinite", infinite.value);
                 localStorage.setItem("musicTiming", musicTiming.value);
                 localStorage.setItem("darkMode", darkMode.value);
+                localStorage.setItem("enableNotifications", enableNotifications.value);
                 
                 if (!newTask.value.startsWith("Can't add more tasks...")) {
                     localStorage.setItem("newTask", newTask.value);
@@ -761,6 +844,9 @@ const app = createApp({
                 const storedDarkMode = localStorage.getItem("darkMode");
                 darkMode.value = storedDarkMode !== null ? (storedDarkMode === "true") : true;
                 
+                const storedEnableNotifications = localStorage.getItem("enableNotifications");
+                enableNotifications.value = storedEnableNotifications !== null ? (storedEnableNotifications === "true") : true;
+                
                 // Fix roundRange if it was set to 0 due to previous infinite mode bug
                 if (roundRange.value === 0) {
                     roundRange.value = 4;
@@ -794,7 +880,7 @@ const app = createApp({
         // Watchers
         watch([roundRange, workRange, sBreakRange, lBreakRange, soundVolume, musicVolume, 
                musicPref, isMusic, autoPomodoro, autoBreak, autoTodoEmpty, infinite, musicTiming,
-               darkMode, newTask, tasks], 
+               darkMode, enableNotifications, newTask, tasks], 
               () => {
                   saveToStorage();
               }, { deep: true });
@@ -845,6 +931,14 @@ const app = createApp({
             
             // Load settings and tasks
             loadFromStorage();
+            
+            // Initialize notification permission
+            if (enableNotifications.value && "Notification" in window) {
+                notificationPermission.value = Notification.permission;
+                if (Notification.permission === "default") {
+                    requestNotificationPermission();
+                }
+            }
             
             // Initialize music UI state
             nextTick(() => {
@@ -923,6 +1017,11 @@ const app = createApp({
             changeVolume,
             musicState,
             musicOn,
+            
+            // Notifications
+            enableNotifications,
+            notificationPermission,
+            handleNotificationToggle,
             
             // Todos
             newTask,

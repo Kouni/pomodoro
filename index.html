@@ -147,6 +147,11 @@
                     </div>
 
                     <div class="toggle-container">
+                        <p style="display: inline-block; vertical-align: middle;">Browser Notifications:</p>
+                        <input class="toggle" type="checkbox" v-model="enableNotifications" @change="handleNotificationToggle" />
+                    </div>
+
+                    <div class="toggle-container">
                         <p style="display: inline-block; vertical-align: middle;">Auto-start pomodoros:</p>
                         <input class="toggle" type="checkbox" v-model="autoPomodoro" />
                     </div>
