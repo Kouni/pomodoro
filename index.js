@@ -188,7 +188,7 @@ const app = createApp({
         };
 
         // Audio methods
-        const soundEffect = (fx) => {
+        const soundEffect = (fx, showNotification = true) => {
             Object.keys(sound).forEach(key => {
                 sound[key].pause();
                 sound[key].currentTime = 0;
@@ -197,8 +197,8 @@ const app = createApp({
             sound[fx].volume = soundVolume.value / 100;
             sound[fx].play();
 
-            // Show notification based on timer state
-            if (enableNotifications.value && notificationPermission.value === "granted") {
+            // Show notification based on timer state (only if showNotification is true)
+            if (showNotification && enableNotifications.value && notificationPermission.value === "granted") {
                 let title, message;
                 
                 if (fx === "finish") {
@@ -533,7 +533,7 @@ const app = createApp({
 
         const fastForwardTimer = () => {
             if (isCountdown.value) {
-                soundEffect(getSoundEffectType());
+                soundEffect(getSoundEffectType(), false);
                 clearInterval(timerInterval);
                 minutes.value = 0;
                 seconds.value = 0;
