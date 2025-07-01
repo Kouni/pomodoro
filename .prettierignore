@@ -1,0 +1,16 @@
+# Dependencies
+node_modules/
+
+# Minified files
+*.min.js
+*.min.css
+
+# Assets
+assets/
+
+# Generated files
+*.map
+
+# Specific files
+progressbar.min.js
+vue.min.js

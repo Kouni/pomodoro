@@ -1,0 +1,44 @@
+{
+    "name": "pomodoro-timer",
+    "version": "1.0.0",
+    "description": "A modern Pomodoro Timer web application with task management and productivity features",
+    "main": "index.js",
+    "type": "module",
+    "scripts": {
+        "dev": "http-server -p 3000 -o",
+        "lint": "eslint index.js --fix",
+        "format": "prettier --write \"*.{js,html,css,scss,json}\"",
+        "serve": "http-server -p 8080",
+        "check": "pnpm run lint && pnpm run format",
+        "validate": "./validate-simple.sh",
+        "test": "pnpm run validate"
+    },
+    "keywords": [
+        "pomodoro",
+        "timer",
+        "productivity",
+        "task-management",
+        "vue"
+    ],
+    "author": "Kouni",
+    "license": "MIT",
+    "devDependencies": {
+        "@eslint/js": "^9.15.0",
+        "eslint": "^9.15.0",
+        "eslint-config-prettier": "^9.1.0",
+        "globals": "^15.12.0",
+        "http-server": "^14.1.1",
+        "prettier": "^3.3.3"
+    },
+    "dependencies": {},
+    "browserslist": [
+        "> 1%",
+        "last 2 versions",
+        "not dead",
+        "not ie 11"
+    ],
+    "engines": {
+        "node": ">=18.0.0",
+        "npm": ">=8.0.0"
+    }
+}

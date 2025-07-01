@@ -1,8 +1,12 @@
-const { createApp, ref, reactive, computed, watch, onMounted, nextTick } = Vue;
+const { createApp, ref, computed, watch, onMounted, nextTick } = Vue;
 
 // Constants
 const MAX_TASKS = 8;
-const ROUND_NAMES = ["Focus on work", "Take a short break", "Take a long break"];
+const ROUND_NAMES = [
+    "Focus on work",
+    "Take a short break",
+    "Take a long break"
+];
 const ROUND_NAMES_SHORT = ["Work", "Short break", "Long break"];
 
 // Utility functions
@@ -20,7 +24,13 @@ const formatTimeForTitle = (minutes, seconds) => {
     }
 };
 
-const updatePageTitle = (minutes, seconds, isWork, isCountdown, isPaused = false) => {
+const updatePageTitle = (
+    minutes,
+    seconds,
+    isWork,
+    isCountdown,
+    isPaused = false
+) => {
     if (isPaused && isCountdown) {
         const emoji = isWork ? "🔥" : "😴";
         document.title = `${emoji} ⏸️ Paused - Pomodoro Timer`;
@@ -74,15 +84,15 @@ const app = createApp({
         // Audio state
         const musicPlaying = ref(false);
         const sound = {
-            "work": new Audio("assets/audio_break.mp3"),
-            "break": new Audio("assets/audio_work.mp3"),
-            "finish": new Audio("assets/audio_finish.mp3")
+            work: new Audio("assets/audio_break.mp3"),
+            break: new Audio("assets/audio_work.mp3"),
+            finish: new Audio("assets/audio_finish.mp3")
         };
         const music = {
-            "nature": new Audio("assets/audio_nature.mp3"),
-            "rain": new Audio("assets/audio_rain.mp3"),
-            "cafe": new Audio("assets/audio_cafe.mp3"),
-            "music": new Audio("assets/audio_music.mp3")
+            nature: new Audio("assets/audio_nature.mp3"),
+            rain: new Audio("assets/audio_rain.mp3"),
+            cafe: new Audio("assets/audio_cafe.mp3"),
+            music: new Audio("assets/audio_music.mp3")
         };
 
         // Notification state
@@ -106,7 +116,6 @@ const app = createApp({
         // Notification methods
         const requestNotificationPermission = async () => {
             if (!("Notification" in window)) {
-                console.log("This browser does not support notifications");
                 return false;
             }
 
@@ -120,32 +129,34 @@ const app = createApp({
                     // For Chrome/Brave compatibility, ensure we handle the permission request properly
                     const permission = await Notification.requestPermission();
                     notificationPermission.value = permission;
-                    
+
                     // Test notification to ensure it works in Chrome/Brave
                     if (permission === "granted") {
                         try {
-                            const testNotification = new Notification("Pomodoro Timer", {
-                                body: "Notifications enabled successfully!",
-                                icon: "assets/favicon/favicon-32x32.png",
-                                tag: "test-notification",
-                                silent: false
-                            });
-                            
+                            const testNotification = new Notification(
+                                "Pomodoro Timer",
+                                {
+                                    body: "Notifications enabled successfully!",
+                                    icon: "assets/favicon/favicon-32x32.png",
+                                    tag: "test-notification",
+                                    silent: false
+                                }
+                            );
+
                             setTimeout(() => {
                                 try {
                                     testNotification.close();
-                                } catch (e) {
+                                } catch (_e) {
                                     // Ignore errors
                                 }
                             }, 3000);
-                        } catch (e) {
-                            console.warn("Test notification failed:", e);
+                        } catch (_e) {
+                            // Test notification failed - ignore
                         }
                     }
-                    
+
                     return permission === "granted";
-                } catch (error) {
-                    console.error("Error requesting notification permission:", error);
+                } catch (_error) {
                     return false;
                 }
             }
@@ -153,8 +164,15 @@ const app = createApp({
             return false;
         };
 
-        const showNotification = (title, message, icon = "assets/favicon/favicon-32x32.png") => {
-            if (!enableNotifications.value || notificationPermission.value !== "granted") {
+        const showNotification = (
+            title,
+            message,
+            icon = "assets/favicon/favicon-32x32.png"
+        ) => {
+            if (
+                !enableNotifications.value ||
+                notificationPermission.value !== "granted"
+            ) {
                 return;
             }
 
@@ -164,7 +182,7 @@ const app = createApp({
                     body: message,
                     icon: icon,
                     tag: "pomodoro-timer",
-                    silent: false,
+                    silent: false
                     // Remove requireInteraction for Chrome compatibility
                     // requireInteraction: true
                 });
@@ -178,29 +196,33 @@ const app = createApp({
                 setTimeout(() => {
                     try {
                         notification.close();
-                    } catch (e) {
+                    } catch (_e) {
                         // Ignore errors when closing notifications
                     }
                 }, 8000);
-            } catch (error) {
-                console.error("Failed to show notification:", error);
+            } catch (_error) {
+                // Failed to show notification - ignore
             }
         };
 
         // Audio methods
         const soundEffect = (fx, enableNotificationSound = true) => {
-            Object.keys(sound).forEach(key => {
+            Object.keys(sound).forEach((key) => {
                 sound[key].pause();
                 sound[key].currentTime = 0;
             });
-            
+
             sound[fx].volume = soundVolume.value / 100;
             sound[fx].play();
 
             // Show notification based on timer state (only if showNotification is true)
-            if (enableNotificationSound && enableNotifications.value && notificationPermission.value === "granted") {
+            if (
+                enableNotificationSound &&
+                enableNotifications.value &&
+                notificationPermission.value === "granted"
+            ) {
                 let title, message;
-                
+
                 if (fx === "finish") {
                     title = "Pomodoro Session Complete!";
                     message = "All rounds completed. Great job!";
@@ -211,26 +233,31 @@ const app = createApp({
                     title = "Work Time!";
                     message = "Break's over. Time to focus and get productive!";
                 }
-                
-                showNotification(title, message);
+
+                // Only show notification if title and message are defined
+                if (title && message) {
+                    showNotification(title, message);
+                }
             }
         };
 
         const changeVolume = () => {
-            Object.keys(music).forEach(key => {
+            Object.keys(music).forEach((key) => {
                 music[key].volume = musicVolume.value / 100;
             });
         };
 
         const musicState = () => {
             const slider = document.querySelector("#music-slider");
-            const buttons = document.querySelectorAll("#music_container button");
+            const buttons = document.querySelectorAll(
+                "#music_container button"
+            );
             const musicTiming = document.querySelector("#music-timing");
-            
+
             if (isMusic.value) {
                 slider.classList.remove("disabled");
                 slider.disabled = false;
-                buttons.forEach(el => {
+                buttons.forEach((el) => {
                     el.classList.remove("disabled");
                     el.disabled = false;
                 });
@@ -244,10 +271,13 @@ const app = createApp({
                 // Only start music if timing conditions are met
                 if (isCountdown.value) {
                     const isWork = roundName.value === ROUND_NAMES[0];
-                    const shouldPlayMusic = (
-                        (isWork && (musicTiming.value === "work" || musicTiming.value === "both")) ||
-                        (!isWork && (musicTiming.value === "breaks" || musicTiming.value === "both"))
-                    );
+                    const shouldPlayMusic =
+                        (isWork &&
+                            (musicTiming.value === "work" ||
+                                musicTiming.value === "both")) ||
+                        (!isWork &&
+                            (musicTiming.value === "breaks" ||
+                                musicTiming.value === "both"));
                     if (shouldPlayMusic) {
                         musicOn(musicPref.value);
                     }
@@ -255,7 +285,7 @@ const app = createApp({
             } else {
                 slider.classList.add("disabled");
                 slider.disabled = true;
-                buttons.forEach(el => {
+                buttons.forEach((el) => {
                     el.classList.add("disabled");
                     el.disabled = true;
                 });
@@ -272,7 +302,7 @@ const app = createApp({
 
         const musicOn = (fx) => {
             musicPlaying.value = false;
-            Object.keys(music).forEach(key => {
+            Object.keys(music).forEach((key) => {
                 music[key].pause();
                 music[key].currentTime = 0;
             });
@@ -286,10 +316,13 @@ const app = createApp({
             // Check if music should play based on timing settings
             if (isCountdown.value) {
                 const isWork = roundName.value === ROUND_NAMES[0];
-                const shouldPlayMusic = (
-                    (isWork && (musicTiming.value === "work" || musicTiming.value === "both")) ||
-                    (!isWork && (musicTiming.value === "breaks" || musicTiming.value === "both"))
-                );
+                const shouldPlayMusic =
+                    (isWork &&
+                        (musicTiming.value === "work" ||
+                            musicTiming.value === "both")) ||
+                    (!isWork &&
+                        (musicTiming.value === "breaks" ||
+                            musicTiming.value === "both"));
                 if (!shouldPlayMusic) {
                     return; // Don't play music if timing conditions aren't met
                 }
@@ -317,7 +350,10 @@ const app = createApp({
 
         // Timer methods
         const getSoundEffectType = () => {
-            if (currentRound.value > totalRound.value || currentRound.value === totalRound.value) {
+            if (
+                currentRound.value > totalRound.value ||
+                currentRound.value === totalRound.value
+            ) {
                 return "finish";
             }
             return currentRound.value % 2 === 0 ? "break" : "work";
@@ -326,25 +362,29 @@ const app = createApp({
         const resetTimer = () => {
             clearInterval(timerInterval);
             timerBar.set(1);
-            
+
             // Stop music if playing
-            if (musicPlaying.value) musicOn("");
-            
+            if (musicPlaying.value) {
+                musicOn("");
+            }
+
             minutes.value = workRange.value;
             seconds.value = 0;
             playState.value = true;
-            
+
             // Reset round indicators (only if not in infinite mode)
             if (!infinite.value) {
-                document.querySelectorAll("#rounds-container li").forEach(el => {
-                    el.classList.remove("process", "active");
-                });
+                document
+                    .querySelectorAll("#rounds-container li")
+                    .forEach((el) => {
+                        el.classList.remove("process", "active");
+                    });
             }
-            
+
             isCountdown.value = false;
             isPaused.value = false;
             currentRound.value = 1;
-            
+
             // Reset page title
             updatePageTitle(minutes.value, seconds.value, false, false, false);
         };
@@ -353,19 +393,26 @@ const app = createApp({
             clearInterval(timerInterval);
             timerInterval = setInterval(() => {
                 if (!isPaused.value) {
-                    nowDate.value = Math.trunc((new Date()).getTime() / 1000);
-                    
-                    minutes.value = Math.trunc((newDate.value - nowDate.value) / 60) % 60;
+                    nowDate.value = Math.trunc(new Date().getTime() / 1000);
+
+                    minutes.value =
+                        Math.trunc((newDate.value - nowDate.value) / 60) % 60;
                     seconds.value = (newDate.value - nowDate.value) % 60;
-                    
+
                     // Update page title based on current mode
                     const isWork = roundName.value === ROUND_NAMES[0];
-                    updatePageTitle(minutes.value, seconds.value, isWork, isCountdown.value, false);
-                    
+                    updatePageTitle(
+                        minutes.value,
+                        seconds.value,
+                        isWork,
+                        isCountdown.value,
+                        false
+                    );
+
                     if (newDate.value - nowDate.value === 0) {
                         soundEffect(getSoundEffectType());
                     }
-                    
+
                     if (newDate.value - nowDate.value < 0) {
                         clearInterval(timerInterval);
                         minutes.value = 0;
@@ -382,7 +429,9 @@ const app = createApp({
             // Only update round indicators if not in infinite mode
             if (!infinite.value) {
                 const roundIndex = Math.floor(currentRound.value / 2);
-                const roundEl = document.querySelector(`#rounds-container li:nth-child(${roundIndex})`);
+                const roundEl = document.querySelector(
+                    `#rounds-container li:nth-child(${roundIndex})`
+                );
                 if (roundEl) {
                     roundEl.classList.remove("process");
                     roundEl.classList.add("active");
@@ -393,8 +442,13 @@ const app = createApp({
         const handleMusicForBreak = () => {
             if (musicTiming.value === "work") {
                 // Only during work - stop music during breaks
-                if (musicPlaying.value) musicOn("");
-            } else if (musicTiming.value === "breaks" || musicTiming.value === "both") {
+                if (musicPlaying.value) {
+                    musicOn("");
+                }
+            } else if (
+                musicTiming.value === "breaks" ||
+                musicTiming.value === "both"
+            ) {
                 // During breaks or both - start music during breaks
                 if (isMusic.value && !musicPlaying.value) {
                     musicOn(musicPref.value);
@@ -404,26 +458,30 @@ const app = createApp({
 
         const startCountdown = () => {
             let autoStart = true;
-            
+
             if (currentRound.value > totalRound.value) {
                 // Finished
                 clearInterval(timerInterval);
                 playState.value = true;
                 isCountdown.value = false;
                 if (!infinite.value) {
-                    document.querySelectorAll("#rounds-container li").forEach(el => {
-                        el.classList.remove("process");
-                        el.classList.add("active");
-                    });
+                    document
+                        .querySelectorAll("#rounds-container li")
+                        .forEach((el) => {
+                            el.classList.remove("process");
+                            el.classList.add("active");
+                        });
                 }
                 timerBar.set(0);
-                if (musicPlaying.value) musicOn("");
-                
+                if (musicPlaying.value) {
+                    musicOn("");
+                }
+
                 // Reset page title to default when all rounds are completed
                 document.title = "Pomodoro Timer";
                 return;
             }
-            
+
             if (currentRound.value === totalRound.value) {
                 // Long break
                 autoStart = autoBreak.value;
@@ -450,38 +508,55 @@ const app = createApp({
                 handleMusicForBreak();
             } else {
                 // Work
-                autoStart = !autoTodoEmpty.value ? 
-                    autoPomodoro.value : 
-                    (Object.keys(tasks.value).length > 0 && autoPomodoro.value);
-                
+                autoStart = !autoTodoEmpty.value
+                    ? autoPomodoro.value
+                    : Object.keys(tasks.value).length > 0 && autoPomodoro.value;
+
                 minutes.value = workRange.value;
                 totalTime.value = workRange.value * 60;
                 roundName.value = ROUND_NAMES[0];
                 if (!infinite.value) {
-                    const roundEl = document.querySelector(`#rounds-container li:nth-child(${(currentRound.value + 1) / 2})`);
-                    if (roundEl) roundEl.classList.add("process");
+                    const roundEl = document.querySelector(
+                        `#rounds-container li:nth-child(${(currentRound.value + 1) / 2})`
+                    );
+                    if (roundEl) {
+                        roundEl.classList.add("process");
+                    }
                 }
                 // Handle music for work mode
                 if (musicTiming.value === "breaks") {
                     // Only during breaks - stop music during work
-                    if (musicPlaying.value) musicOn("");
-                } else if ((musicTiming.value === "work" || musicTiming.value === "both") && isMusic.value && !musicPlaying.value) {
+                    if (musicPlaying.value) {
+                        musicOn("");
+                    }
+                } else if (
+                    (musicTiming.value === "work" ||
+                        musicTiming.value === "both") &&
+                    isMusic.value &&
+                    !musicPlaying.value
+                ) {
                     // During work or both - start music during work
                     musicOn(musicPref.value);
                 }
             }
-            
-            nowDate.value = Math.trunc((new Date()).getTime() / 1000);
+
+            nowDate.value = Math.trunc(new Date().getTime() / 1000);
             newDate.value = nowDate.value + totalTime.value;
             isCountdown.value = true;
             timerBar.set(1);
-            
+
             // Update page title based on current mode
             const isWork = roundName.value === ROUND_NAMES[0];
-            updatePageTitle(minutes.value, seconds.value, isWork, isCountdown.value, false);
-            
+            updatePageTitle(
+                minutes.value,
+                seconds.value,
+                isWork,
+                isCountdown.value,
+                false
+            );
+
             if (currentRound.value === 1 || autoStart) {
-                timerBar.animate(0, { duration: (totalTime.value * 1000 + 10) });
+                timerBar.animate(0, { duration: totalTime.value * 1000 + 10 });
                 countDownTimer();
             } else {
                 playState.value = true;
@@ -490,22 +565,30 @@ const app = createApp({
 
         const playFunc = () => {
             playState.value = !playState.value;
-            const playBtn = document.querySelector("#button-container > #play > div");
-            
+            const playBtn = document.querySelector(
+                "#button-container > #play > div"
+            );
+
             if (playBtn.classList.contains("play")) {
                 if (isCountdown.value) {
                     isPaused.value = false;
-                    nowDate.value = Math.trunc((new Date()).getTime() / 1000);
-                    newDate.value = nowDate.value + minutes.value * 60 + seconds.value;
+                    nowDate.value = Math.trunc(new Date().getTime() / 1000);
+                    newDate.value =
+                        nowDate.value + minutes.value * 60 + seconds.value;
                     countDownTimer();
-                    timerBar.animate(0, { duration: ((newDate.value - nowDate.value) * 1000 + 10) });
-                    
+                    timerBar.animate(0, {
+                        duration: (newDate.value - nowDate.value) * 1000 + 10
+                    });
+
                     if (isMusic.value && !musicPlaying.value) {
                         const isWork = roundName.value === ROUND_NAMES[0];
-                        const shouldPlayMusic = (
-                            (isWork && (musicTiming.value === "work" || musicTiming.value === "both")) ||
-                            (!isWork && (musicTiming.value === "breaks" || musicTiming.value === "both"))
-                        );
+                        const shouldPlayMusic =
+                            (isWork &&
+                                (musicTiming.value === "work" ||
+                                    musicTiming.value === "both")) ||
+                            (!isWork &&
+                                (musicTiming.value === "breaks" ||
+                                    musicTiming.value === "both"));
                         if (shouldPlayMusic) {
                             musicOn(musicPref.value);
                         }
@@ -513,9 +596,11 @@ const app = createApp({
                 } else {
                     currentRound.value = 1;
                     if (!infinite.value) {
-                        document.querySelectorAll("#rounds-container li").forEach(el => {
-                            el.classList.remove("active");
-                        });
+                        document
+                            .querySelectorAll("#rounds-container li")
+                            .forEach((el) => {
+                                el.classList.remove("active");
+                            });
                         totalRound.value = roundRange.value * 2;
                     }
                     startCountdown();
@@ -523,11 +608,19 @@ const app = createApp({
             } else {
                 isPaused.value = true;
                 timerBar.stop();
-                if (musicPlaying.value) musicOn("");
-                
+                if (musicPlaying.value) {
+                    musicOn("");
+                }
+
                 // Update page title when paused
                 const isWork = roundName.value === ROUND_NAMES[0];
-                updatePageTitle(minutes.value, seconds.value, isWork, isCountdown.value, true);
+                updatePageTitle(
+                    minutes.value,
+                    seconds.value,
+                    isWork,
+                    isCountdown.value,
+                    true
+                );
             }
         };
 
@@ -539,20 +632,20 @@ const app = createApp({
                 seconds.value = 0;
                 isCountdown.value = false;
                 currentRound.value++;
-                
+
                 // For manual fast forward, we want to force start the next round
                 // regardless of autoStart settings
                 const originalAutoStart = {
                     pomodoro: autoPomodoro.value,
                     break: autoBreak.value
                 };
-                
+
                 // Temporarily enable auto start for this transition
                 autoPomodoro.value = true;
                 autoBreak.value = true;
-                
+
                 startCountdown();
-                
+
                 // Restore original autoStart settings
                 autoPomodoro.value = originalAutoStart.pomodoro;
                 autoBreak.value = originalAutoStart.break;
@@ -588,7 +681,6 @@ const app = createApp({
         };
 
         const toggleDarkMode = () => {
-            console.log('Dark mode toggled:', darkMode.value);
             // Dark mode is automatically saved via watcher
         };
 
@@ -597,7 +689,6 @@ const app = createApp({
                 const granted = await requestNotificationPermission();
                 if (!granted) {
                     enableNotifications.value = false;
-                    console.log('Notification permission denied');
                 }
             }
         };
@@ -628,10 +719,12 @@ const app = createApp({
                     musicTimingEl.style.color = "#666";
                     musicTimingEl.style.cursor = "default";
                 }
-                document.querySelectorAll("#music_container button").forEach(el => {
-                    el.classList.add("disabled");
-                    el.disabled = true;
-                });
+                document
+                    .querySelectorAll("#music_container button")
+                    .forEach((el) => {
+                        el.classList.add("disabled");
+                        el.disabled = true;
+                    });
                 musicOn("");
                 musicPref.value = "nature";
             } else {
@@ -647,10 +740,14 @@ const app = createApp({
 
         // Todo methods
         const addTask = () => {
-            if (newTask.value.length <= 0) return;
-            
+            if (newTask.value.length <= 0) {
+                return;
+            }
+
             if (tasks.value.length >= MAX_TASKS) {
-                const textarea = document.querySelector("#todo-container #add-task-container textarea");
+                const textarea = document.querySelector(
+                    "#todo-container #add-task-container textarea"
+                );
                 if (textarea) {
                     textarea.disabled = true;
                     newTask.value = "Can't add more tasks...";
@@ -675,15 +772,19 @@ const app = createApp({
 
             newTask.value = newTask.value.trim().replace(/\s+/g, " ");
             if (newTask.value.length > 0) {
-                newTask.value = newTask.value.charAt(0).toUpperCase() + newTask.value.slice(1);
+                newTask.value =
+                    newTask.value.charAt(0).toUpperCase() +
+                    newTask.value.slice(1);
             }
-            
-            if (newTask.value.length <= 0) return;
+
+            if (newTask.value.length <= 0) {
+                return;
+            }
 
             tasks.value.push({
                 text: newTask.value,
                 completed: false,
-                priority: isPriority,
+                priority: isPriority
             });
 
             newTask.value = "";
@@ -692,52 +793,76 @@ const app = createApp({
 
         const removeTask = (id) => {
             const taskEl = document.querySelector(`.task:nth-child(${id + 1})`);
-            const buttonEl = document.querySelector(`.task:nth-child(${id + 1}) button`);
-            
-            if (taskEl) taskEl.classList.add("remove");
-            if (buttonEl) buttonEl.classList.add("remove");
+            const buttonEl = document.querySelector(
+                `.task:nth-child(${id + 1}) button`
+            );
+
+            if (taskEl) {
+                taskEl.classList.add("remove");
+            }
+            if (buttonEl) {
+                buttonEl.classList.add("remove");
+            }
 
             setTimeout(() => {
-                document.querySelectorAll(".task").forEach(el => el.classList.remove("remove"));
-                document.querySelectorAll(".task button").forEach(el => el.classList.remove("remove"));
+                document
+                    .querySelectorAll(".task")
+                    .forEach((el) => el.classList.remove("remove"));
+                document
+                    .querySelectorAll(".task button")
+                    .forEach((el) => el.classList.remove("remove"));
                 tasks.value.splice(id, 1);
 
                 // Refresh task completion states
                 for (let i = 0; i < tasks.value.length; i++) {
-                    const wasCompleted = tasks.value[i].completed;
+                    // const wasCompleted = tasks.value[i].completed;
                     tasks.value[i].completed = !tasks.value[i].completed;
                     completeTask(i);
                 }
             }, 500);
-            
+
             updateTodoContainerHeight();
         };
 
         const completeTask = (id) => {
-            if (id >= tasks.value.length) return;
-            
+            if (id >= tasks.value.length) {
+                return;
+            }
+
             tasks.value[id].completed = !tasks.value[id].completed;
-            
+
             const taskEl = document.querySelector(`.task:nth-child(${id + 1})`);
-            if (!taskEl) return;
+            if (!taskEl) {
+                return;
+            }
 
             const spans = taskEl.querySelectorAll("span");
             const tickContainer = taskEl.querySelector(".tick-container");
             const tick = taskEl.querySelector(".tick-container .tick");
 
             if (tasks.value[id].completed) {
-                spans.forEach(el => el.classList.add("completed"));
-                if (tickContainer) tickContainer.classList.add("tick-complete");
-                if (tick) tick.classList.add("draw");
+                spans.forEach((el) => el.classList.add("completed"));
+                if (tickContainer) {
+                    tickContainer.classList.add("tick-complete");
+                }
+                if (tick) {
+                    tick.classList.add("draw");
+                }
             } else {
-                spans.forEach(el => el.classList.remove("completed"));
-                if (tickContainer) tickContainer.classList.remove("tick-complete");
-                if (tick) tick.classList.remove("draw");
+                spans.forEach((el) => el.classList.remove("completed"));
+                if (tickContainer) {
+                    tickContainer.classList.remove("tick-complete");
+                }
+                if (tick) {
+                    tick.classList.remove("draw");
+                }
             }
         };
 
         const updateTodoContainerHeight = () => {
-            const todoWindowMedia = window.matchMedia(`(max-height: ${checkTodoHeight()}px)`);
+            const todoWindowMedia = window.matchMedia(
+                `(max-height: ${checkTodoHeight()}px)`
+            );
             adaptTodoContainer(todoWindowMedia);
         };
 
@@ -752,11 +877,17 @@ const app = createApp({
         };
 
         const adaptTodoContainer = (media) => {
-            const container = document.querySelector("#todo-container .container");
-            const taskContainer = document.querySelector("#todo-container .container #task-container");
-            
-            if (!container || !taskContainer) return;
-            
+            const container = document.querySelector(
+                "#todo-container .container"
+            );
+            const taskContainer = document.querySelector(
+                "#todo-container .container #task-container"
+            );
+
+            if (!container || !taskContainer) {
+                return;
+            }
+
             if (media.matches) {
                 container.style.top = "20px";
                 container.style.transform = "translateY(0)";
@@ -777,37 +908,67 @@ const app = createApp({
         const openTab = (elem) => {
             if (elem === "settings") {
                 const overlay = document.getElementsByClassName("overlay")[0];
-                const container = document.querySelector("#settings-container .container");
-                if (overlay) overlay.classList.add("opacBg");
-                if (container) container.style.left = "20px";
+                const container = document.querySelector(
+                    "#settings-container .container"
+                );
+                if (overlay) {
+                    overlay.classList.add("opacBg");
+                }
+                if (container) {
+                    container.style.left = "20px";
+                }
             } else {
                 const overlay = document.getElementsByClassName("overlay")[1];
-                const container = document.querySelector("#todo-container .container");
-                if (overlay) overlay.classList.add("opacBg");
-                if (container) container.style.right = "20px";
+                const container = document.querySelector(
+                    "#todo-container .container"
+                );
+                if (overlay) {
+                    overlay.classList.add("opacBg");
+                }
+                if (container) {
+                    container.style.right = "20px";
+                }
             }
         };
 
         const removeOverlay = (elem) => {
             if (elem === "settings") {
                 const overlay = document.getElementsByClassName("overlay")[0];
-                const container = document.querySelector("#settings-container .container");
-                if (overlay) overlay.classList.remove("opacBg");
-                if (container) container.style.left = "-320px";
+                const container = document.querySelector(
+                    "#settings-container .container"
+                );
+                if (overlay) {
+                    overlay.classList.remove("opacBg");
+                }
+                if (container) {
+                    container.style.left = "-320px";
+                }
             } else {
                 const overlay = document.getElementsByClassName("overlay")[1];
-                const container = document.querySelector("#todo-container .container");
-                if (overlay) overlay.classList.remove("opacBg");
-                if (container) container.style.right = "-350px";
+                const container = document.querySelector(
+                    "#todo-container .container"
+                );
+                if (overlay) {
+                    overlay.classList.remove("opacBg");
+                }
+                if (container) {
+                    container.style.right = "-350px";
+                }
             }
         };
 
         const settingsTabs = (tab) => {
-            const hr = document.querySelector("#settings-container .container hr");
-            const pageContainer = document.querySelector("#settings-container #page-container");
-            
-            if (!hr || !pageContainer) return;
-            
+            const hr = document.querySelector(
+                "#settings-container .container hr"
+            );
+            const pageContainer = document.querySelector(
+                "#settings-container #page-container"
+            );
+
+            if (!hr || !pageContainer) {
+                return;
+            }
+
             if (tab === "time") {
                 hr.style.marginLeft = "0";
                 pageContainer.style.marginLeft = "0";
@@ -822,7 +983,7 @@ const app = createApp({
 
         // Storage functions
         const saveToStorage = () => {
-            if (typeof(Storage) !== "undefined") {
+            if (typeof Storage !== "undefined") {
                 localStorage.setItem("roundRange", roundRange.value);
                 localStorage.setItem("workRange", workRange.value);
                 localStorage.setItem("sBreakRange", sBreakRange.value);
@@ -837,8 +998,11 @@ const app = createApp({
                 localStorage.setItem("infinite", infinite.value);
                 localStorage.setItem("musicTiming", musicTiming.value);
                 localStorage.setItem("darkMode", darkMode.value);
-                localStorage.setItem("enableNotifications", enableNotifications.value);
-                
+                localStorage.setItem(
+                    "enableNotifications",
+                    enableNotifications.value
+                );
+
                 if (!newTask.value.startsWith("Can't add more tasks...")) {
                     localStorage.setItem("newTask", newTask.value);
                 } else {
@@ -849,20 +1013,33 @@ const app = createApp({
         };
 
         const loadFromStorage = () => {
-            if (typeof(Storage) !== "undefined" && localStorage.getItem("roundRange") !== null) {
+            if (
+                typeof Storage !== "undefined" &&
+                localStorage.getItem("roundRange") !== null
+            ) {
                 roundRange.value = parseInt(localStorage.getItem("roundRange"));
                 workRange.value = parseInt(localStorage.getItem("workRange"));
                 minutes.value = parseInt(localStorage.getItem("workRange"));
-                sBreakRange.value = parseInt(localStorage.getItem("sBreakRange"));
-                lBreakRange.value = parseInt(localStorage.getItem("lBreakRange"));
-                soundVolume.value = parseInt(localStorage.getItem("soundVolume"));
-                musicVolume.value = parseInt(localStorage.getItem("musicVolume"));
+                sBreakRange.value = parseInt(
+                    localStorage.getItem("sBreakRange")
+                );
+                lBreakRange.value = parseInt(
+                    localStorage.getItem("lBreakRange")
+                );
+                soundVolume.value = parseInt(
+                    localStorage.getItem("soundVolume")
+                );
+                musicVolume.value = parseInt(
+                    localStorage.getItem("musicVolume")
+                );
                 musicPref.value = localStorage.getItem("musicPref");
-                isMusic.value = (localStorage.getItem("isMusic") === "true");
-                autoPomodoro.value = (localStorage.getItem("autoPomodoro") === "true");
-                autoBreak.value = (localStorage.getItem("autoBreak") === "true");
-                autoTodoEmpty.value = (localStorage.getItem("autoTodoEmpty") === "true");
-                infinite.value = (localStorage.getItem("infinite") === "true");
+                isMusic.value = localStorage.getItem("isMusic") === "true";
+                autoPomodoro.value =
+                    localStorage.getItem("autoPomodoro") === "true";
+                autoBreak.value = localStorage.getItem("autoBreak") === "true";
+                autoTodoEmpty.value =
+                    localStorage.getItem("autoTodoEmpty") === "true";
+                infinite.value = localStorage.getItem("infinite") === "true";
                 // Handle migration from old musicInBreaks to new musicTiming
                 const oldMusicInBreaks = localStorage.getItem("musicInBreaks");
                 const storedMusicTiming = localStorage.getItem("musicTiming");
@@ -870,40 +1047,47 @@ const app = createApp({
                     musicTiming.value = storedMusicTiming;
                 } else if (oldMusicInBreaks !== null) {
                     // Migrate from old format
-                    musicTiming.value = (oldMusicInBreaks === "true") ? "both" : "work";
+                    musicTiming.value =
+                        oldMusicInBreaks === "true" ? "both" : "work";
                     localStorage.removeItem("musicInBreaks"); // Clean up old setting
                 } else {
                     musicTiming.value = "work"; // Default
                 }
-                
+
                 const storedDarkMode = localStorage.getItem("darkMode");
-                darkMode.value = storedDarkMode !== null ? (storedDarkMode === "true") : true;
-                
-                const storedEnableNotifications = localStorage.getItem("enableNotifications");
-                enableNotifications.value = storedEnableNotifications !== null ? (storedEnableNotifications === "true") : true;
-                
+                darkMode.value =
+                    storedDarkMode !== null ? storedDarkMode === "true" : true;
+
+                const storedEnableNotifications = localStorage.getItem(
+                    "enableNotifications"
+                );
+                enableNotifications.value =
+                    storedEnableNotifications !== null
+                        ? storedEnableNotifications === "true"
+                        : true;
+
                 // Fix roundRange if it was set to 0 due to previous infinite mode bug
                 if (roundRange.value === 0) {
                     roundRange.value = 4;
                 }
-                
+
                 // Set proper totalRound based on infinite mode
                 if (infinite.value) {
                     totalRound.value = 999; // Large number for infinite mode
                 } else {
                     totalRound.value = roundRange.value * 2;
                 }
-                
+
                 const storedNewTask = localStorage.getItem("newTask");
                 if (storedNewTask !== null) {
                     newTask.value = storedNewTask;
                 }
-                
+
                 const storedTasks = localStorage.getItem("tasks");
                 if (storedTasks !== null) {
                     try {
                         tasks.value = JSON.parse(storedTasks) || [];
-                    } catch (e) {
+                    } catch (_e) {
                         tasks.value = [];
                     }
                 }
@@ -913,24 +1097,41 @@ const app = createApp({
         };
 
         // Watchers
-        watch([roundRange, workRange, sBreakRange, lBreakRange, soundVolume, musicVolume, 
-               musicPref, isMusic, autoPomodoro, autoBreak, autoTodoEmpty, infinite, musicTiming,
-               darkMode, enableNotifications, newTask, tasks], 
-              () => {
-                  saveToStorage();
-              }, { deep: true });
+        watch(
+            [
+                roundRange,
+                workRange,
+                sBreakRange,
+                lBreakRange,
+                soundVolume,
+                musicVolume,
+                musicPref,
+                isMusic,
+                autoPomodoro,
+                autoBreak,
+                autoTodoEmpty,
+                infinite,
+                musicTiming,
+                darkMode,
+                enableNotifications,
+                newTask,
+                tasks
+            ],
+            () => {
+                saveToStorage();
+            },
+            { deep: true }
+        );
 
         // Watch for dark mode changes
         watch(darkMode, (newValue) => {
-            console.log('Dark mode changed to:', newValue);
-            const mainContainer = document.querySelector('#main-container');
+            const mainContainer = document.querySelector("#main-container");
             if (mainContainer) {
                 if (newValue) {
-                    mainContainer.classList.add('dark-theme');
+                    mainContainer.classList.add("dark-theme");
                 } else {
-                    mainContainer.classList.remove('dark-theme');
+                    mainContainer.classList.remove("dark-theme");
                 }
-                console.log('Container classes:', mainContainer.className);
             }
         });
 
@@ -939,11 +1140,14 @@ const app = createApp({
             if (isMusic.value) {
                 if (isCountdown.value) {
                     const isWork = roundName.value === ROUND_NAMES[0];
-                    const shouldPlayMusic = (
-                        (isWork && (musicTiming.value === "work" || musicTiming.value === "both")) ||
-                        (!isWork && (musicTiming.value === "breaks" || musicTiming.value === "both"))
-                    );
-                    
+                    const shouldPlayMusic =
+                        (isWork &&
+                            (musicTiming.value === "work" ||
+                                musicTiming.value === "both")) ||
+                        (!isWork &&
+                            (musicTiming.value === "breaks" ||
+                                musicTiming.value === "both"));
+
                     if (shouldPlayMusic && !musicPlaying.value) {
                         musicOn(musicPref.value); // Start music if conditions are now met
                     } else if (!shouldPlayMusic && musicPlaying.value) {
@@ -961,12 +1165,12 @@ const app = createApp({
         // Lifecycle
         onMounted(() => {
             // Initialize progress bar
-            timerBar = new ProgressBar.Path('#timer-path');
+            timerBar = new ProgressBar.Path("#timer-path");
             timerBar.set(1);
-            
+
             // Load settings and tasks
             loadFromStorage();
-            
+
             // Initialize notification permission
             if (enableNotifications.value && "Notification" in window) {
                 notificationPermission.value = Notification.permission;
@@ -974,37 +1178,51 @@ const app = createApp({
                     requestNotificationPermission();
                 }
             }
-            
+
             // Initialize music UI state
             nextTick(() => {
                 musicState();
-                
+
                 // Apply dark mode if enabled
                 if (darkMode.value) {
-                    const mainContainer = document.querySelector('#main-container');
+                    const mainContainer =
+                        document.querySelector("#main-container");
                     if (mainContainer) {
-                        mainContainer.classList.add('dark-theme');
+                        mainContainer.classList.add("dark-theme");
                     }
                 }
             });
-            
+
             // Initialize todo container height
             updateTodoContainerHeight();
-            
+
             // Restore completed tasks visual state
             nextTick(() => {
                 for (let i = 0; i < tasks.value.length; i++) {
                     if (tasks.value[i].completed) {
                         setTimeout(() => {
-                            const taskEl = document.querySelector(`.task:nth-child(${i + 1})`);
+                            const taskEl = document.querySelector(
+                                `.task:nth-child(${i + 1})`
+                            );
                             if (taskEl) {
-                                const tickContainer = taskEl.querySelector(".tick-container");
-                                const tick = taskEl.querySelector(".tick-container .tick");
+                                const tickContainer =
+                                    taskEl.querySelector(".tick-container");
+                                const tick = taskEl.querySelector(
+                                    ".tick-container .tick"
+                                );
                                 const spans = taskEl.querySelectorAll("span");
-                                
-                                if (tickContainer) tickContainer.classList.add("tick-complete");
-                                if (tick) tick.classList.add("draw");
-                                spans.forEach(el => el.classList.add("completed"));
+
+                                if (tickContainer) {
+                                    tickContainer.classList.add(
+                                        "tick-complete"
+                                    );
+                                }
+                                if (tick) {
+                                    tick.classList.add("draw");
+                                }
+                                spans.forEach((el) =>
+                                    el.classList.add("completed")
+                                );
                             }
                         }, 0);
                     }
@@ -1026,7 +1244,7 @@ const app = createApp({
             resetTimer,
             playFunc,
             fastForwardTimer,
-            
+
             // Settings
             roundRange,
             workRange,
@@ -1047,32 +1265,32 @@ const app = createApp({
             changeInfinite,
             toggleDarkMode,
             resetDefault,
-            
+
             // Audio
             changeVolume,
             musicState,
             musicOn,
-            
+
             // Notifications
             enableNotifications,
             notificationPermission,
             handleNotificationToggle,
-            
+
             // Todos
             newTask,
             tasks,
             addTask,
             removeTask,
             completeTask,
-            
+
             // UI
             openTab,
             removeOverlay,
             settingsTabs,
-            
+
             // Computed
             shortRoundName,
-            
+
             // Utils
             timerFormat
         };
@@ -1080,14 +1298,16 @@ const app = createApp({
 });
 
 // Mount the app
-app.mount('#main-container');
+app.mount("#main-container");
 
 // Window event listeners
 window.addEventListener("load", () => {
     const todoWindowMedia = window.matchMedia("(max-height: 180px)");
     const container = document.querySelector("#todo-container .container");
-    const taskContainer = document.querySelector("#todo-container .container #task-container");
-    
+    const taskContainer = document.querySelector(
+        "#todo-container .container #task-container"
+    );
+
     if (todoWindowMedia.matches && container && taskContainer) {
         container.style.top = "20px";
         container.style.transform = "translateY(0)";
@@ -1101,8 +1321,10 @@ window.addEventListener("load", () => {
 window.addEventListener("resize", () => {
     const todoWindowMedia = window.matchMedia("(max-height: 180px)");
     const container = document.querySelector("#todo-container .container");
-    const taskContainer = document.querySelector("#todo-container .container #task-container");
-    
+    const taskContainer = document.querySelector(
+        "#todo-container .container #task-container"
+    );
+
     if (todoWindowMedia.matches && container && taskContainer) {
         container.style.top = "20px";
         container.style.transform = "translateY(0)";
