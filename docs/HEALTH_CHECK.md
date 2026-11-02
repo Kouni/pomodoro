@@ -302,3 +302,46 @@ b627e3b chore(deps): upgrade eslint and @eslint/js to v10
 6799999 fix(perf): stop preloading the four 25-28 MB music tracks on page load
 af75b85 fix(a11y): restore a visible keyboard focus ring
 ```
+
+---
+
+## 11. UI 實測（Playwright + Chromium headless）[verified]
+
+**環境**：`http-server` 本地提供檔案；unpkg 請求以 Playwright route 回填 npm tarball 內的 `vue.global.prod.js`（附 CORS header，讓 SRI 能驗證）；Google Fonts 以空 CSS stub；`page.clock` 控制 `Date`／timers；注入 axe-core 4.14.0。腳本位於 session scratchpad，**未納入 repo**（需新增 `playwright` devDependency，待確認）。視口：1280×800、1024×480、375×667、320×568。
+
+### 11.1 通過項目
+
+| 項目 | 結果 |
+| --- | --- |
+| 掛載／首屏 | `v-cloak` 移除、`25:00`、4 個圓點、深色主題；0 console error、0 page error |
+| **SRI（H1）** | 正向：Vue 3.5.44 以 `integrity` 載入成功。負向：回填內容多一個註解 → Chromium 報 `Failed to find a valid digest in the 'integrity' attribute`，`window.Vue` 未定義，app 不掛載 |
+| **H5** | 首載只請求 3 個音效檔（206 Partial，共 67 KB）；4 個音樂檔 `preload=none`、無請求 |
+| **H3** | 1 分鐘回合：第 60 秒即播放音效並切換到下一回合（同一 tick），標題同步變成 😴 |
+| 回合流程 | work → short → work → long → finished；圓點 `process`/`active` 正確；完成後顯示 `00:00`、標題還原、play 鍵回到 ▶；再按 play 從 round 1 重來 |
+| 暫停／恢復／重置／快轉 | 暫停 10 秒不走、標題顯示 ⏸️、進度條 `stop`；恢復後每秒遞減；重置回 `01:00` 並清空圓點；快轉進入下一回合 |
+| 設定面板 | 開關、三個分頁切換、滑桿即時更新標籤、音樂 toggle 啟用／停用 6 個控制項、深色模式切換 class、各組 Reset |
+| 音訊行為 | nature 淡入 30 ms × 75 步到 0.75；切曲目時前一首暫停；暫停計時器時音樂暫停、恢復時續播；`timing=work` 進入休息時停止；所有 `play()` 在 headless 皆 resolve |
+| 待辦 | 正規化、`!` 優先、勾選、第 9 筆被擋並顯示 3 秒訊息、刪除後完成狀態保留 |
+| 持久化 | reload 後設定、任務與完成狀態還原（17 個 key） |
+| **H6 focus ring** | Tab 到按鈕時 `outline: solid 2px`、`:focus-visible` 命中 |
+| RWD | 四種視口皆無水平／垂直溢出；按鈕在視口內 |
+| Vue dev build | 以 `vue.global.js` 跑完整流程：**0 `[Vue warn]`** |
+| axe 深色主題 | 無 color-contrast 違規 |
+
+### 11.2 新發現
+
+| ID | 嚴重度 | 標題 | 證據 | 建議修法 | 工作量 |
+| --- | --- | --- | --- | --- | --- |
+| U1 | Medium | **鍵盤 Tab 進入關閉中的待辦側欄會把整個 app 左移 350 px、露出白底** | 第 22 次 Tab 聚焦 `#add-task`：`body.scrollLeft = 350`，`#main-container` 的 rect 變成 `-350..930`（截圖 `15-tab-scroll.png`）。側欄只是 `right: -350px` 移出視口，仍可聚焦；`html { overflow: hidden }` 擋不住 focus 引發的程式化捲動。左側設定側欄不會觸發（scrollLeft 無法為負），但其滑桿同樣可被 Tab 到（第 6 次 Tab：`x=-248, visible=false`） | 兩個 `.container` 加 `inert` 屬性，`openTab` 移除、`removeOverlay` 加回（約 4 行）；同時解決螢幕閱讀器讀到隱藏控制項 | S |
+| U2 | Critical（axe） | 表單控制項與按鈕缺可讀名稱 | `button-name`：`#play`（內容只有 `<div>`）；`label` ×13：4 時間滑桿、2 音量滑桿、6 toggle、textarea；`select-name`：`#music-timing`；`list`：設定 nav `<ul>` 直接包含 `<hr>`；`landmark-one-main`／`region` | `aria-label`／`<label for>`、`<main>`、把 `<hr>` 移出 `<ul>` | S |
+| U3 | Medium | 設定分頁與任務勾選完全無法用鍵盤操作 | `nav li` 與 `.tick-container` 皆 `tabindex=-1`、無 `role`；22 個 Tab 停留點不含它們（H6 剩餘部分） | 改 `<button>`（分頁加 `role=tab`／`aria-selected`） | S |
+| U4 | Low | `prefers-reduced-motion` 未處理 | `emulateMedia({ reducedMotion: "reduce" })` 後計時中仍有動畫在跑 | `@media (prefers-reduced-motion: reduce)` 關閉進度條／按鈕動畫 | S |
+| U5 | Low | 淺色模式「Reset to Default」對比不足 | axe `color-contrast`（serious）：`#add_page .default.underline`（截圖 `06-settings-add-light.png`） | 淺色主題給該按鈕較深的顏色 | S |
+| U6 | Low | Rounds=10 時圓點折成 3 行 | desktop／mobile 皆 3 行；與計時器、按鈕未重疊（截圖 `16-rounds10-desktop.png`） | 縮小圓點間距或限制單行 | S |
+| U7 | Low | `theme-color` 與預設主題不一致；body 背景透明 | `meta theme-color=#ffffff` 而預設深色；`body` 背景 `rgba(0,0,0,0)` → 任何位移（如 U1）都露白 | 依主題動態設定 `theme-color`；`body` 背景跟隨主題 | S |
+| U8 | Low | 首載資源 | 本地未壓縮：17 requests／393 KB，前四名 Vue 167 KB、`index.js` 48 KB、`progressbar.min.js` 41 KB、`index.css` 37 KB；兩個 Google Fonts stylesheet 為 render-blocking 且無 `preconnect`；DCL 141 ms（本地） | `<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>`、合併為單一 fonts 請求、兩個 `<script>` 加 `defer`（保序）；GitHub Pages 會 gzip，實際傳輸約 1/3 [estimate] | S |
+| U9 | Info | 通知無法在 headless 驗證 | `grantPermissions(["notifications"])` 後 `Notification.permission` 仍為 `denied`（about:blank 亦然），屬環境限制 | 通知路徑目前只由單元測試覆蓋 [unverified in browser] | — |
+
+### 11.3 截圖
+
+`scratchpad/ui/`：`01-load-dark`、`02-short-break`、`03-finished`、`04/05/06-settings-*`、`07-light-mode`、`08/09-todo*`、`10-focus`、`11/12/13-{mobile,short,tiny}*`、`14-infinite`、`15-tab-scroll`、`16-rounds10-*`。
