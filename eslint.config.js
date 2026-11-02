@@ -46,13 +46,7 @@ export default [
         }
     },
     {
-        ignores: [
-            "node_modules/**",
-            "assets/**",
-            "*.min.js",
-            "progressbar.min.js",
-            "vue.min.js"
-        ]
+        ignores: ["node_modules/**", "assets/**", "*.min.js"]
     },
     // Must be last: turns off every rule Prettier already enforces.
     eslintConfigPrettier

@@ -11,6 +11,3 @@ assets/
 # Generated files
 *.map
 
-# Specific files
-progressbar.min.js
-vue.min.js
