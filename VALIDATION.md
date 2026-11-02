@@ -79,6 +79,9 @@ After automated validation, manually test:
 # Development server
 pnpm run dev        # Start with auto-open browser
 
+# Styles (index.css is generated from index.scss; commit both)
+pnpm run build:css
+
 # Code quality
 pnpm run lint       # Check and fix code issues
 pnpm run format     # Format code with Prettier

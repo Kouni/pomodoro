@@ -8,6 +8,7 @@
         "dev": "http-server -p 3000 -o",
         "lint": "eslint index.js --fix",
         "format": "prettier --write \"*.{js,html,css,scss,json}\"",
+        "build:css": "sass --no-source-map --style=expanded index.scss index.css && prettier --write index.css",
         "serve": "http-server -p 8080",
         "check": "pnpm run lint && pnpm run format",
         "validate": "./validate-simple.sh",
@@ -33,6 +34,7 @@
         "globals": "^17.14.0",
         "http-server": "^14.1.1",
         "prettier": "^3.9.10",
+        "sass": "1.107.1",
         "vue": "3.5.44"
     },
     "browserslist": [

@@ -37,6 +37,12 @@ button.button {
     -webkit-box-shadow: 0 0 20px 0 rgba(255, 255, 255, 0.5);
     box-shadow: 0 0 20px 0 rgba(255, 255, 255, 0.5);
     transition: box-shadow 0.15s ease-in-out !important;
+}
+button.button:hover {
+    -webkit-box-shadow: 0 0 24px 3px rgba(255, 255, 255, 0.5);
+    box-shadow: 0 0 24px 3px rgba(255, 255, 255, 0.5);
+}
+button.button {
     padding: 15px 35px;
     color: black;
     border: none;
@@ -54,10 +60,6 @@ button.button {
     -moz-user-select: none;
     -ms-user-select: none;
     user-select: none;
-}
-button.button:hover {
-    -webkit-box-shadow: 0 0 24px 3px rgba(255, 255, 255, 0.5);
-    box-shadow: 0 0 24px 3px rgba(255, 255, 255, 0.5);
 }
 button.button:hover {
     outline: none;
@@ -111,19 +113,19 @@ a.underline:visited:hover:after {
     opacity: 0.2;
 }
 
-button.anim {
-    text-decoration: none;
-    color: white;
-    text-transform: uppercase;
-    transition: background-color 0.6s ease-in-out;
-    overflow: hidden;
-}
 button.anim:after {
     border-radius: 100%;
 }
 button.anim:active:after {
     width: 40px;
     height: 40px;
+}
+button.anim {
+    text-decoration: none;
+    color: white;
+    text-transform: uppercase;
+    transition: background-color 0.6s ease-in-out;
+    overflow: hidden;
 }
 button.anim:after {
     content: "";
@@ -284,6 +286,13 @@ body {
     position: relative;
     top: 30px;
 }
+#main-container #button-container button:after {
+    border-radius: 100%;
+}
+#main-container #button-container button:active:after {
+    width: 50px;
+    height: 50px;
+}
 #main-container #button-container button {
     position: relative;
     padding: 0;
@@ -292,13 +301,6 @@ body {
     height: 50px;
     vertical-align: middle;
     color: #333333;
-}
-#main-container #button-container button:after {
-    border-radius: 100%;
-}
-#main-container #button-container button:active:after {
-    width: 50px;
-    height: 50px;
 }
 #main-container #button-container button > div {
     margin: 0 auto;
@@ -735,11 +737,13 @@ body {
     -webkit-box-shadow: 0 0 20px 0 rgba(253, 77, 75, 0.5);
     box-shadow: 0 0 20px 0 rgba(253, 77, 75, 0.5);
     transition: box-shadow 0.15s ease-in-out !important;
-    padding: 0;
 }
 #todo-container .container button.button:hover {
     -webkit-box-shadow: 0 0 24px 3px rgba(253, 77, 75, 0.5);
     box-shadow: 0 0 24px 3px rgba(253, 77, 75, 0.5);
+}
+#todo-container .container button.button {
+    padding: 0;
 }
 #todo-container .container #task-container {
     position: relative;
@@ -930,14 +934,14 @@ body {
     #button-container {
         top: 25px !important;
     }
-    #button-container button {
-        width: 47px !important;
-        height: 47px !important;
-    }
     #button-container button:after {
         border-radius: 100%;
     }
     #button-container button:active:after {
+        width: 47px !important;
+        height: 47px !important;
+    }
+    #button-container button {
         width: 47px !important;
         height: 47px !important;
     }
@@ -977,17 +981,17 @@ body {
     #button-container {
         top: 22px !important;
     }
-    #button-container button {
-        width: 44px !important;
-        height: 44px !important;
-        font-size: 18px !important;
-    }
     #button-container button:after {
         border-radius: 100%;
     }
     #button-container button:active:after {
         width: 44px !important;
         height: 44px !important;
+    }
+    #button-container button {
+        width: 44px !important;
+        height: 44px !important;
+        font-size: 18px !important;
     }
     #button-container button > img {
         width: 14px !important;
@@ -1055,17 +1059,17 @@ body {
     #button-container {
         top: -125px !important;
     }
-    #button-container button {
-        width: 40px !important;
-        height: 40px !important;
-        font-size: 16px !important;
-    }
     #button-container button:after {
         border-radius: 100%;
     }
     #button-container button:active:after {
         width: 40px !important;
         height: 40px !important;
+    }
+    #button-container button {
+        width: 40px !important;
+        height: 40px !important;
+        font-size: 16px !important;
     }
     #button-container button > img {
         width: 13px !important;
@@ -1585,8 +1589,6 @@ body {
 .dark-theme #main-container #button-container button#play img {
     filter: brightness(0) invert(1) !important;
 }
-
-/*# sourceMappingURL=index.css.map */
 
 /* Keep keyboard focus visible (WCAG 2.4.7); the outline: none resets above
    only apply to pointer focus. !important beats the id-nested resets. */

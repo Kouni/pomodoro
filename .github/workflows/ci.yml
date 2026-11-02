@@ -24,6 +24,7 @@ jobs:
           node-version-file: .nvmrc
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - run: pnpm run build:css && git diff --exit-code -- index.css
       - run: pnpm exec eslint index.js tests eslint.config.js playwright.config.js
       - run: pnpm exec prettier --check "*.{js,html,css,scss,json}" "tests/**/*.js"
       - run: pnpm test
