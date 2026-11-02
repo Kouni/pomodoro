@@ -1,5 +1,13 @@
 import { test, expect } from "./fixtures.js";
 
+const dotRows = (page) =>
+    page.$$eval(
+        "#rounds-container li",
+        (els) =>
+            new Set(els.map((e) => Math.round(e.getBoundingClientRect().top)))
+                .size
+    );
+
 test("tabs switch sections and expose aria-selected", async ({ page, app }) => {
     await app.goto();
     await app.openSettings();
@@ -38,6 +46,9 @@ test("sliders update their readouts and the idle timer", async ({
     await expect(page.locator("#time-page")).toContainText("30:00");
     expect(await app.dots()).toHaveLength(6);
     expect(await app.timer()).toBe("40:00");
+    await app.setSlider("Rounds", 10);
+    expect(await app.dots()).toHaveLength(10);
+    expect(await dotRows(page)).toBe(1);
 
     await page
         .locator("#time-page")

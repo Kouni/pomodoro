@@ -40,6 +40,18 @@ for (const viewport of [
         });
 
         await app.openSettings();
+        await app.setSlider("Rounds", 10);
+        expect(
+            await page.$$eval(
+                "#rounds-container li",
+                (els) =>
+                    new Set(
+                        els.map((e) =>
+                            Math.round(e.getBoundingClientRect().top)
+                        )
+                    ).size
+            )
+        ).toBe(1);
         const settings = await app.settingsPanel.boundingBox();
         expect(settings.x).toBeGreaterThanOrEqual(0);
         if (viewport.width >= 340) {

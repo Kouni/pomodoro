@@ -308,7 +308,7 @@ body {
         top: 5px;
         margin: 0 auto;
         text-align: center;
-        max-width: 123px;
+        max-width: 260px; // 10 dots at 25px pitch stay on one row
         height: 50px;
         display: table;
 
@@ -975,7 +975,7 @@ body {
         }
     }
     #rounds-container {
-        max-width: 99px !important;
+        max-width: 230px !important;
         height: 40px !important;
         li {
             font-size: 20px !important;
