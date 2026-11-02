@@ -1,5 +1,6 @@
 import js from "@eslint/js";
 import globals from "globals";
+import eslintConfigPrettier from "eslint-config-prettier";
 
 export default [
     js.configs.recommended,
@@ -27,25 +28,12 @@ export default [
             "no-debugger": "error",
             "no-alert": "warn",
 
-            // Code style
-            indent: ["error", 4],
-            quotes: ["error", "double"],
-            semi: ["error", "always"],
-            "comma-dangle": ["error", "never"],
-            "no-trailing-spaces": "error",
-            "eol-last": "error",
-
             // Best practices
             eqeqeq: ["error", "always"],
             curly: ["error", "all"],
             "no-var": "error",
             "prefer-const": "error",
-            "no-implicit-globals": "error",
-
-            // ES6+
-            "arrow-spacing": "error",
-            "template-curly-spacing": "error",
-            "object-curly-spacing": ["error", "always"]
+            "no-implicit-globals": "error"
         }
     },
     {
@@ -65,5 +53,7 @@ export default [
             "progressbar.min.js",
             "vue.min.js"
         ]
-    }
+    },
+    // Must be last: turns off every rule Prettier already enforces.
+    eslintConfigPrettier
 ];
