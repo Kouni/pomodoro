@@ -527,7 +527,11 @@
                             rows="1"
                             maxlength="50"
                             spellcheck="false"
-                            oninput="this.style.height = '';this.style.height = this.scrollHeight - 10 + 'px';"
+                            oninput="
+                                this.style.height = '';
+                                this.style.height =
+                                    this.scrollHeight - 10 + 'px';
+                            "
                             v-model="newTask"
                             @keydown.enter.prevent="addTask"
                         ></textarea>

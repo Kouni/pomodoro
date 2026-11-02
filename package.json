@@ -23,14 +23,13 @@
     "author": "Kouni",
     "license": "MIT",
     "devDependencies": {
-        "@eslint/js": "^9.15.0",
-        "eslint": "^9.15.0",
-        "eslint-config-prettier": "^9.1.0",
-        "globals": "^15.12.0",
+        "@eslint/js": "^9.39.5",
+        "eslint": "^9.39.5",
+        "eslint-config-prettier": "^9.1.2",
+        "globals": "^15.15.0",
         "http-server": "^14.1.1",
-        "prettier": "^3.3.3"
+        "prettier": "^3.9.10"
     },
-    "dependencies": {},
     "browserslist": [
         "> 1%",
         "last 2 versions",
