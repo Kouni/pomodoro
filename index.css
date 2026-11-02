@@ -345,11 +345,11 @@ body {
     text-align: center;
     overflow: hidden;
 }
-#settings-container .container ul {
+#settings-container .container .tabs {
     margin: 10px 0 0;
     padding: 0 36px;
 }
-#settings-container .container li {
+#settings-container .container [role="tab"] {
     text-decoration: none;
     list-style-type: none;
     display: inline-block;
@@ -1591,6 +1591,7 @@ body {
 /* Keep keyboard focus visible (WCAG 2.4.7); the outline: none resets above
    only apply to pointer focus. !important beats the id-nested resets. */
 button:focus-visible,
+[role="button"]:focus-visible,
 input:focus-visible,
 textarea:focus-visible,
 select:focus-visible {

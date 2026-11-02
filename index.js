@@ -109,6 +109,9 @@ const app = createApp({
         const newTask = ref("");
         const tasks = ref([]);
 
+        // UI state
+        const activeTab = ref("time");
+
         // Computed properties
         const shortRoundName = computed(() => {
             for (let i = 0; i < ROUND_NAMES.length; i++) {
@@ -969,6 +972,7 @@ const app = createApp({
         };
 
         const settingsTabs = (tab) => {
+            activeTab.value = tab;
             const hr = document.querySelector(
                 "#settings-container .container hr"
             );
@@ -1295,6 +1299,7 @@ const app = createApp({
             completeTask,
 
             // UI
+            activeTab,
             openTab,
             removeOverlay,
             settingsTabs,

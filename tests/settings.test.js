@@ -238,3 +238,12 @@ test("side panels are inert while closed and interactive while open", () => {
     assert.equal(todo.inert, true);
     assert.equal(todo.style.right, "-350px");
 });
+
+test("settingsTabs tracks the active tab for aria-selected", () => {
+    const { api } = createApp();
+    assert.equal(api.activeTab.value, "time");
+    api.settingsTabs("audio");
+    assert.equal(api.activeTab.value, "audio");
+    api.settingsTabs("add");
+    assert.equal(api.activeTab.value, "add");
+});

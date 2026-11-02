@@ -163,30 +163,46 @@
 
                 <div class="container" inert>
                     <nav>
-                        <ul>
-                            <!--                    <li @click="settingsTabs('time')">&#9203;</li>-->
-                            <li @click="settingsTabs('time')">
+                        <div
+                            class="tabs"
+                            role="tablist"
+                            aria-label="Settings sections"
+                        >
+                            <button
+                                type="button"
+                                role="tab"
+                                :aria-selected="activeTab === 'time'"
+                                @click="settingsTabs('time')"
+                            >
                                 <img
                                     src="assets/settings_hourglass.svg"
                                     alt="Time settings"
                                 />
-                            </li>
-                            <!--                    <li @click="settingsTabs('audio')">&#128266;</li>-->
-                            <li @click="settingsTabs('audio')">
+                            </button>
+                            <button
+                                type="button"
+                                role="tab"
+                                :aria-selected="activeTab === 'audio'"
+                                @click="settingsTabs('audio')"
+                            >
                                 <img
                                     src="assets/settings_volume.svg"
                                     alt="Audio settings"
                                 />
-                            </li>
-                            <!--                    <li @click="settingsTabs('add')">💿</li>-->
-                            <li @click="settingsTabs('add')">
+                            </button>
+                            <button
+                                type="button"
+                                role="tab"
+                                :aria-selected="activeTab === 'add'"
+                                @click="settingsTabs('add')"
+                            >
                                 <img
                                     src="assets/settings_plus.svg"
                                     alt="More settings"
                                 />
-                            </li>
-                            <hr />
-                        </ul>
+                            </button>
+                            <hr role="presentation" />
+                        </div>
                     </nav>
 
                     <div id="page-container">
@@ -527,8 +543,14 @@
                             :key="index"
                         >
                             <div
-                                @click="completeTask(index)"
                                 class="tick-container"
+                                role="button"
+                                tabindex="0"
+                                :aria-pressed="task.completed"
+                                :aria-label="'Complete ' + task.text"
+                                @click="completeTask(index)"
+                                @keydown.enter.prevent="completeTask(index)"
+                                @keydown.space.prevent="completeTask(index)"
                             >
                                 <div class="tick"></div>
                             </div>
