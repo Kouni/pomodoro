@@ -174,10 +174,17 @@ test("addTask normalises whitespace, capitalises and reads the ! priority prefix
     api.addTask();
     api.newTask.value = "";
     api.addTask();
-    assert.deepEqual(api.tasks.value, [
-        { text: "Buy milk", completed: false, priority: false },
-        { text: "Call mum", completed: false, priority: true }
-    ]);
+    assert.deepEqual(
+        api.tasks.value.map(({ id: _id, ...task }) => task),
+        [
+            { text: "Buy milk", completed: false, priority: false },
+            { text: "Call mum", completed: false, priority: true }
+        ]
+    );
+    assert.deepEqual(
+        api.tasks.value.map((task) => task.id),
+        [1, 2]
+    );
     assert.equal(api.newTask.value, "");
 });
 
@@ -192,8 +199,10 @@ test("addTask caps at 8 tasks and shows a transient message", (t) => {
     api.addTask();
     assert.equal(api.tasks.value.length, 8);
     assert.equal(api.newTask.value, "Can't add more tasks...");
+    assert.equal(api.tasksFull.value, true);
     t.mock.timers.tick(3000);
     assert.equal(api.newTask.value, "");
+    assert.equal(api.tasksFull.value, false);
 });
 
 test("completeTask toggles and removeTask splices after its animation delay", (t) => {
@@ -212,7 +221,9 @@ test("completeTask toggles and removeTask splices after its animation delay", (t
 
     api.removeTask(0);
     assert.equal(api.tasks.value.length, 3); // not yet
+    assert.equal(api.removingId.value, api.tasks.value[0].id);
     t.mock.timers.tick(500);
+    assert.equal(api.removingId.value, null);
     assert.deepEqual(
         api.tasks.value.map((x) => [x.text, x.completed]),
         [

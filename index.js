@@ -124,6 +124,10 @@ const app = createApp({
         // Todo state
         const newTask = ref("");
         const tasks = ref([]);
+        const tasksFull = ref(false);
+        const removingId = ref(null);
+        let taskSeq = 0;
+        const nextTaskId = () => ++taskSeq;
 
         // UI state
         const activeTab = ref("time");
@@ -751,22 +755,14 @@ const app = createApp({
             }
 
             if (tasks.value.length >= MAX_TASKS) {
-                const textarea = document.querySelector(
-                    "#todo-container #add-task-container textarea"
-                );
-                if (textarea) {
-                    textarea.disabled = true;
-                    newTask.value = "Can't add more tasks...";
-                    textarea.classList.add("alert");
-
-                    setTimeout(() => {
-                        if (newTask.value === "Can't add more tasks...") {
-                            newTask.value = "";
-                        }
-                        textarea.classList.remove("alert");
-                        textarea.disabled = false;
-                    }, 3000);
-                }
+                tasksFull.value = true;
+                newTask.value = "Can't add more tasks...";
+                setTimeout(() => {
+                    if (newTask.value === "Can't add more tasks...") {
+                        newTask.value = "";
+                    }
+                    tasksFull.value = false;
+                }, 3000);
                 return;
             }
 
@@ -788,6 +784,7 @@ const app = createApp({
             }
 
             tasks.value.push({
+                id: nextTaskId(),
                 text: newTask.value,
                 completed: false,
                 priority: isPriority
@@ -797,72 +794,25 @@ const app = createApp({
             updateTodoContainerHeight();
         };
 
-        const removeTask = (id) => {
-            const taskEl = document.querySelector(`.task:nth-child(${id + 1})`);
-            const buttonEl = document.querySelector(
-                `.task:nth-child(${id + 1}) button`
-            );
-
-            if (taskEl) {
-                taskEl.classList.add("remove");
-            }
-            if (buttonEl) {
-                buttonEl.classList.add("remove");
-            }
-
+        const removeTask = (index) => {
+            const { id } = tasks.value[index];
+            removingId.value = id; // drives the exit animation class
             setTimeout(() => {
-                document
-                    .querySelectorAll(".task")
-                    .forEach((el) => el.classList.remove("remove"));
-                document
-                    .querySelectorAll(".task button")
-                    .forEach((el) => el.classList.remove("remove"));
-                tasks.value.splice(id, 1);
-
-                // Refresh task completion states
-                for (let i = 0; i < tasks.value.length; i++) {
-                    // const wasCompleted = tasks.value[i].completed;
-                    tasks.value[i].completed = !tasks.value[i].completed;
-                    completeTask(i);
+                const i = tasks.value.findIndex((task) => task.id === id);
+                if (i !== -1) {
+                    tasks.value.splice(i, 1);
                 }
+                removingId.value = null;
             }, 500);
 
             updateTodoContainerHeight();
         };
 
-        const completeTask = (id) => {
-            if (id >= tasks.value.length) {
+        const completeTask = (index) => {
+            if (index >= tasks.value.length) {
                 return;
             }
-
-            tasks.value[id].completed = !tasks.value[id].completed;
-
-            const taskEl = document.querySelector(`.task:nth-child(${id + 1})`);
-            if (!taskEl) {
-                return;
-            }
-
-            const spans = taskEl.querySelectorAll("span");
-            const tickContainer = taskEl.querySelector(".tick-container");
-            const tick = taskEl.querySelector(".tick-container .tick");
-
-            if (tasks.value[id].completed) {
-                spans.forEach((el) => el.classList.add("completed"));
-                if (tickContainer) {
-                    tickContainer.classList.add("tick-complete");
-                }
-                if (tick) {
-                    tick.classList.add("draw");
-                }
-            } else {
-                spans.forEach((el) => el.classList.remove("completed"));
-                if (tickContainer) {
-                    tickContainer.classList.remove("tick-complete");
-                }
-                if (tick) {
-                    tick.classList.remove("draw");
-                }
-            }
+            tasks.value[index].completed = !tasks.value[index].completed;
         };
 
         const updateTodoContainerHeight = () => {
@@ -1101,6 +1051,18 @@ const app = createApp({
                     try {
                         const parsed = JSON.parse(storedTasks);
                         tasks.value = Array.isArray(parsed) ? parsed : [];
+                        // Stable ids for v-for keys; older saves have none.
+                        taskSeq = Math.max(
+                            0,
+                            ...tasks.value
+                                .map((task) => task.id)
+                                .filter(Number.isInteger)
+                        );
+                        tasks.value.forEach((task) => {
+                            if (!Number.isInteger(task.id)) {
+                                task.id = nextTaskId();
+                            }
+                        });
                     } catch (_e) {
                         tasks.value = [];
                     }
@@ -1202,39 +1164,6 @@ const app = createApp({
 
             // Initialize todo container height
             updateTodoContainerHeight();
-
-            // Restore completed tasks visual state
-            nextTick(() => {
-                for (let i = 0; i < tasks.value.length; i++) {
-                    if (tasks.value[i].completed) {
-                        setTimeout(() => {
-                            const taskEl = document.querySelector(
-                                `.task:nth-child(${i + 1})`
-                            );
-                            if (taskEl) {
-                                const tickContainer =
-                                    taskEl.querySelector(".tick-container");
-                                const tick = taskEl.querySelector(
-                                    ".tick-container .tick"
-                                );
-                                const spans = taskEl.querySelectorAll("span");
-
-                                if (tickContainer) {
-                                    tickContainer.classList.add(
-                                        "tick-complete"
-                                    );
-                                }
-                                if (tick) {
-                                    tick.classList.add("draw");
-                                }
-                                spans.forEach((el) =>
-                                    el.classList.add("completed")
-                                );
-                            }
-                        }, 0);
-                    }
-                }
-            });
         });
 
         // Return reactive state and methods
@@ -1285,6 +1214,8 @@ const app = createApp({
             // Todos
             newTask,
             tasks,
+            tasksFull,
+            removingId,
             addTask,
             removeTask,
             completeTask,

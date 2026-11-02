@@ -69,7 +69,7 @@ test("stored settings are restored on boot", () => {
     assert.equal(api.enableNotifications.value, false);
     assert.equal(api.newTask.value, "draft");
     assert.deepEqual(api.tasks.value, [
-        { text: "A", completed: true, priority: false }
+        { text: "A", completed: true, priority: false, id: 1 }
     ]);
 });
 
@@ -153,4 +153,23 @@ test("corrupt numbers and unknown choices fall back to defaults", () => {
     assert.equal(api.musicPref.value, "nature");
     assert.equal(api.musicTiming.value, "work");
     assert.deepEqual(api.tasks.value, []);
+});
+
+test("stored tasks keep their ids and new ones continue the sequence", () => {
+    const { api } = createApp({
+        storage: {
+            ...DEFAULTS,
+            tasks: JSON.stringify([
+                { id: 7, text: "Old", completed: false, priority: false },
+                { text: "Older, no id", completed: false, priority: false }
+            ])
+        }
+    });
+    assert.deepEqual(
+        api.tasks.value.map((task) => task.id),
+        [7, 8]
+    );
+    api.newTask.value = "new";
+    api.addTask();
+    assert.equal(api.tasks.value[2].id, 9);
 });

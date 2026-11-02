@@ -535,10 +535,12 @@
                         <div
                             class="task"
                             v-for="(task, index) in tasks"
-                            :key="index"
+                            :key="task.id"
+                            :class="{ remove: task.id === removingId }"
                         >
                             <div
                                 class="tick-container"
+                                :class="{ 'tick-complete': task.completed }"
                                 role="button"
                                 tabindex="0"
                                 :aria-pressed="task.completed"
@@ -547,17 +549,33 @@
                                 @keydown.enter.prevent="completeTask(index)"
                                 @keydown.space.prevent="completeTask(index)"
                             >
-                                <div class="tick"></div>
+                                <div
+                                    class="tick"
+                                    :class="{ draw: task.completed }"
+                                ></div>
                             </div>
-                            <span :class="{priority: task.priority}"
+                            <span
+                                :class="{
+                                    priority: task.priority,
+                                    completed: task.completed
+                                }"
                                 >{{ task.text }}</span
                             >
                             <span
                                 class="complete"
-                                :class="{priority: task.priority}"
+                                :class="{
+                                    priority: task.priority,
+                                    completed: task.completed
+                                }"
                                 >{{ task.text }}</span
                             >
-                            <button @click="removeTask(index)">&#10006;</button>
+                            <button
+                                :class="{ remove: task.id === removingId }"
+                                :aria-label="'Remove ' + task.text"
+                                @click="removeTask(index)"
+                            >
+                                &#10006;
+                            </button>
                         </div>
                     </div>
 
@@ -568,6 +586,8 @@
                             maxlength="50"
                             spellcheck="false"
                             aria-label="New task"
+                            :disabled="tasksFull"
+                            :class="{ alert: tasksFull }"
                             v-model="newTask"
                             @keydown.enter.prevent="addTask"
                         ></textarea>

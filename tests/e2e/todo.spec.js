@@ -32,11 +32,7 @@ test("adds, normalises, prioritises, completes and removes tasks", async ({
         page.locator(".task").nth(1).locator("span").first()
     ).toHaveClass(/completed/);
 
-    await page
-        .locator(".task")
-        .nth(0)
-        .getByRole("button", { name: "✖" })
-        .click();
+    await page.getByRole("button", { name: "Remove Buy milk" }).click();
     await app.tick(600);
     expect(await taskTexts(page)).toEqual(["Call mum"]);
     await expect(
