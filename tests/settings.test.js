@@ -111,9 +111,13 @@ test("notification toggle stays on when permission is granted", async () => {
     assert.equal(api.notificationPermission.value, "granted");
 });
 
-test("app fails to mount when the Notification API is absent", () => {
-    // Documents H4 (iOS Safari outside a Home-Screen PWA has no Notification).
-    assert.throws(() => createApp({ notification: null }));
+test("app mounts without the Notification API and treats it as denied", async () => {
+    // iOS Safari outside a Home-Screen PWA has no Notification global.
+    const { api } = createApp({ notification: null });
+    assert.equal(api.notificationPermission.value, "denied");
+    api.enableNotifications.value = true;
+    await api.handleNotificationToggle();
+    assert.equal(api.enableNotifications.value, false);
 });
 
 test("audio: all 7 tracks are created eagerly at startup", () => {

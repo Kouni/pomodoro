@@ -96,7 +96,9 @@ const app = createApp({
         };
 
         // Notification state
-        const notificationPermission = ref(Notification.permission);
+        const notificationPermission = ref(
+            "Notification" in window ? Notification.permission : "denied"
+        );
         const enableNotifications = ref(true);
 
         // Todo state
