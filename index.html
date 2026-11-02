@@ -159,9 +159,17 @@
                 role="complementary"
                 aria-label="Settings"
             >
-                <div class="overlay" @click="removeOverlay('settings')"></div>
+                <div
+                    class="overlay"
+                    :class="{ opacBg: settingsOpen }"
+                    @click="removeOverlay('settings')"
+                ></div>
 
-                <div class="container" inert>
+                <div
+                    class="container"
+                    :class="{ open: settingsOpen }"
+                    :inert="!settingsOpen"
+                >
                     <nav>
                         <div
                             class="tabs"
@@ -201,11 +209,11 @@
                                     alt="More settings"
                                 />
                             </button>
-                            <hr role="presentation" />
+                            <hr role="presentation" :style="tabStyle.hr" />
                         </div>
                     </nav>
 
-                    <div id="page-container">
+                    <div id="page-container" :style="tabStyle.page">
                         <div id="time-page">
                             <p>Work</p>
                             <span>{{ timerFormat(workRange) }}:00</span><br />
@@ -299,9 +307,10 @@
                             <p>Music Volume</p>
                             <span>{{ musicVolume }}%</span><br />
                             <input
-                                disabled
                                 id="music-slider"
-                                class="slider disabled"
+                                class="slider"
+                                :class="{ disabled: !isMusic }"
+                                :disabled="!isMusic"
                                 type="range"
                                 min="0"
                                 max="100"
@@ -316,8 +325,8 @@
                                 style="margin: 15px auto 0; width: 100%"
                             >
                                 <button
-                                    disabled
-                                    class="disabled"
+                                    :class="{ disabled: !isMusic }"
+                                    :disabled="!isMusic"
                                     @click="musicOn('nature')"
                                     style="
                                         width: 22%;
@@ -329,8 +338,8 @@
                                     Nature
                                 </button>
                                 <button
-                                    disabled
-                                    class="disabled"
+                                    :class="{ disabled: !isMusic }"
+                                    :disabled="!isMusic"
                                     @click="musicOn('rain')"
                                     style="
                                         width: 22%;
@@ -342,8 +351,8 @@
                                     Rain
                                 </button>
                                 <button
-                                    disabled
-                                    class="disabled"
+                                    :class="{ disabled: !isMusic }"
+                                    :disabled="!isMusic"
                                     @click="musicOn('cafe')"
                                     style="
                                         width: 22%;
@@ -355,8 +364,8 @@
                                     Café
                                 </button>
                                 <button
-                                    disabled
-                                    class="disabled"
+                                    :class="{ disabled: !isMusic }"
+                                    :disabled="!isMusic"
                                     @click="musicOn('music')"
                                     style="
                                         width: 22%;
@@ -372,21 +381,10 @@
                             <p style="margin: 15px auto 5px">Music Timing</p>
                             <select
                                 id="music-timing"
-                                disabled
-                                class="disabled"
+                                :class="{ disabled: !isMusic }"
+                                :disabled="!isMusic"
                                 aria-label="Music timing"
                                 v-model="musicTiming"
-                                style="
-                                    width: 70%;
-                                    padding: 6px;
-                                    border-radius: 5px;
-                                    border: 1px solid #ccc;
-                                    font-size: 13px;
-                                    background: #fff;
-                                    outline: none;
-                                    color: #141414;
-                                    margin-bottom: 10px;
-                                "
                             >
                                 <option value="work">Only during work</option>
                                 <option value="breaks">
@@ -528,9 +526,17 @@
                 role="complementary"
                 aria-label="To-do list"
             >
-                <div class="overlay" @click="removeOverlay('todo')"></div>
+                <div
+                    class="overlay"
+                    :class="{ opacBg: todoOpen }"
+                    @click="removeOverlay('todo')"
+                ></div>
 
-                <div class="container" inert>
+                <div
+                    class="container"
+                    :class="{ open: todoOpen }"
+                    :inert="!todoOpen"
+                >
                     <p v-if="Object.keys(tasks).length === 0">
                         You have no tasks to complete
                     </p>

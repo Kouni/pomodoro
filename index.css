@@ -361,6 +361,11 @@ body {
     left: -320px;
     transform: translateY(-50%);
     transition: left 0.3s ease-out;
+}
+#settings-container .container.open {
+    left: 20px;
+}
+#settings-container .container {
     background: white;
     border-radius: 15px;
     text-align: center;
@@ -690,6 +695,24 @@ body {
     background: #fd4d4b;
 }
 
+#music-timing {
+    width: 70%;
+    padding: 6px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    font-size: 13px;
+    background: #fff;
+    outline: none;
+    color: #141414;
+    margin-bottom: 10px;
+    cursor: pointer;
+}
+#music-timing.disabled {
+    background: #a9a9a9;
+    color: #666;
+    cursor: default;
+}
+
 #todo-container {
     color: #141414;
 }
@@ -697,6 +720,11 @@ body {
     z-index: 11;
     position: absolute;
     right: -350px;
+}
+#todo-container .container.open {
+    right: 20px;
+}
+#todo-container .container {
     top: 50%;
     transform: translateY(-50%);
     transition: right 0.3s ease-out;

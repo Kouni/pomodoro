@@ -114,8 +114,6 @@ export const createApp = ({
 
     const playBtn = fakeEl();
     const panels = {
-        "#settings-container .container": fakeEl(),
-        "#todo-container .container": fakeEl(),
         "#main-container": fakeEl(),
         'meta[name="theme-color"]': fakeEl()
     };

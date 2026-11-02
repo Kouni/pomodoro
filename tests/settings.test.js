@@ -233,21 +233,33 @@ test("completeTask toggles and removeTask splices after its animation delay", (t
     );
 });
 
-test("side panels are inert while closed and interactive while open", () => {
-    const { api, panels } = createApp();
-    const settings = panels["#settings-container .container"];
-    const todo = panels["#todo-container .container"];
+test("side panel open state drives their class and inert bindings", () => {
+    const { api } = createApp();
+    assert.deepEqual(
+        [api.settingsOpen.value, api.todoOpen.value],
+        [false, false]
+    );
     api.openTab("settings");
-    assert.equal(settings.inert, false);
-    assert.equal(settings.style.left, "20px");
+    assert.equal(api.settingsOpen.value, true);
     api.removeOverlay("settings");
-    assert.equal(settings.inert, true);
-    assert.equal(settings.style.left, "-320px");
+    assert.equal(api.settingsOpen.value, false);
     api.openTab("todo");
-    assert.equal(todo.inert, false);
+    assert.equal(api.todoOpen.value, true);
     api.removeOverlay("todo");
-    assert.equal(todo.inert, true);
-    assert.equal(todo.style.right, "-350px");
+    assert.equal(api.todoOpen.value, false);
+});
+
+test("tab offsets follow the active tab", () => {
+    const { api } = createApp();
+    assert.deepEqual(api.tabStyle.value, {
+        hr: { marginLeft: "0" },
+        page: { marginLeft: "0" }
+    });
+    api.settingsTabs("add");
+    assert.deepEqual(api.tabStyle.value, {
+        hr: { marginLeft: "168px" },
+        page: { marginLeft: "-200%" }
+    });
 });
 
 test("settingsTabs tracks the active tab for aria-selected", () => {

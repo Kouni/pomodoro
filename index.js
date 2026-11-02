@@ -132,6 +132,17 @@ const app = createApp({
 
         // UI state
         const activeTab = ref("time");
+        const settingsOpen = ref(false);
+        const todoOpen = ref(false);
+        const TAB_OFFSETS = {
+            time: ["0", "0"],
+            audio: ["84px", "-100%"],
+            add: ["168px", "-200%"]
+        };
+        const tabStyle = computed(() => ({
+            hr: { marginLeft: TAB_OFFSETS[activeTab.value][0] },
+            page: { marginLeft: TAB_OFFSETS[activeTab.value][1] }
+        }));
 
         // Computed properties
         const shortRoundName = computed(() => {
@@ -277,45 +288,12 @@ const app = createApp({
             });
         };
 
+        // The controls' disabled state is bound to isMusic in the template.
         const musicState = () => {
-            const slider = document.querySelector("#music-slider");
-            const buttons = document.querySelectorAll(
-                "#music_container button"
-            );
-            const musicTiming = document.querySelector("#music-timing");
-
-            if (isMusic.value) {
-                slider.classList.remove("disabled");
-                slider.disabled = false;
-                buttons.forEach((el) => {
-                    el.classList.remove("disabled");
-                    el.disabled = false;
-                });
-                if (musicTiming) {
-                    musicTiming.classList.remove("disabled");
-                    musicTiming.disabled = false;
-                    musicTiming.style.backgroundColor = "#fff";
-                    musicTiming.style.color = "#141414";
-                    musicTiming.style.cursor = "pointer";
-                }
-                if (isCountdown.value && shouldPlayMusic()) {
-                    musicOn(musicPref.value);
-                }
-            } else {
-                slider.classList.add("disabled");
-                slider.disabled = true;
-                buttons.forEach((el) => {
-                    el.classList.add("disabled");
-                    el.disabled = true;
-                });
-                if (musicTiming) {
-                    musicTiming.classList.add("disabled");
-                    musicTiming.disabled = true;
-                    musicTiming.style.backgroundColor = "#a9a9a9";
-                    musicTiming.style.color = "#666";
-                    musicTiming.style.cursor = "default";
-                }
+            if (!isMusic.value) {
                 musicOn("");
+            } else if (isCountdown.value && shouldPlayMusic()) {
+                musicOn(musicPref.value);
             }
         };
 
@@ -667,25 +645,6 @@ const app = createApp({
                 soundVolume.value = 100;
                 musicVolume.value = 75;
                 musicTiming.value = "work";
-                const slider = document.querySelector("#music-slider");
-                const musicTimingEl = document.querySelector("#music-timing");
-                if (slider) {
-                    slider.classList.add("disabled");
-                    slider.disabled = true;
-                }
-                if (musicTimingEl) {
-                    musicTimingEl.classList.add("disabled");
-                    musicTimingEl.disabled = true;
-                    musicTimingEl.style.backgroundColor = "#a9a9a9";
-                    musicTimingEl.style.color = "#666";
-                    musicTimingEl.style.cursor = "default";
-                }
-                document
-                    .querySelectorAll("#music_container button")
-                    .forEach((el) => {
-                        el.classList.add("disabled");
-                        el.disabled = true;
-                    });
                 musicOn("");
                 musicPref.value = "nature";
             } else {
@@ -811,88 +770,26 @@ const app = createApp({
             }
         };
 
-        // UI methods
+        // UI methods: panels and tabs are rendered from these refs (the
+        // closed panels are inert so keyboard focus cannot reach them).
         const openTab = (elem) => {
             if (elem === "settings") {
-                const overlay = document.getElementsByClassName("overlay")[0];
-                const container = document.querySelector(
-                    "#settings-container .container"
-                );
-                if (overlay) {
-                    overlay.classList.add("opacBg");
-                }
-                if (container) {
-                    container.inert = false;
-                    container.style.left = "20px";
-                }
+                settingsOpen.value = true;
             } else {
-                const overlay = document.getElementsByClassName("overlay")[1];
-                const container = document.querySelector(
-                    "#todo-container .container"
-                );
-                if (overlay) {
-                    overlay.classList.add("opacBg");
-                }
-                if (container) {
-                    container.inert = false;
-                    container.style.right = "20px";
-                }
+                todoOpen.value = true;
             }
         };
 
         const removeOverlay = (elem) => {
             if (elem === "settings") {
-                const overlay = document.getElementsByClassName("overlay")[0];
-                const container = document.querySelector(
-                    "#settings-container .container"
-                );
-                if (overlay) {
-                    overlay.classList.remove("opacBg");
-                }
-                if (container) {
-                    // Closed panels are off-canvas but still in the DOM; inert
-                    // keeps keyboard focus (and screen readers) out of them.
-                    container.inert = true;
-                    container.style.left = "-320px";
-                }
+                settingsOpen.value = false;
             } else {
-                const overlay = document.getElementsByClassName("overlay")[1];
-                const container = document.querySelector(
-                    "#todo-container .container"
-                );
-                if (overlay) {
-                    overlay.classList.remove("opacBg");
-                }
-                if (container) {
-                    container.inert = true;
-                    container.style.right = "-350px";
-                }
+                todoOpen.value = false;
             }
         };
 
         const settingsTabs = (tab) => {
             activeTab.value = tab;
-            const hr = document.querySelector(
-                "#settings-container .container hr"
-            );
-            const pageContainer = document.querySelector(
-                "#settings-container #page-container"
-            );
-
-            if (!hr || !pageContainer) {
-                return;
-            }
-
-            if (tab === "time") {
-                hr.style.marginLeft = "0";
-                pageContainer.style.marginLeft = "0";
-            } else if (tab === "audio") {
-                hr.style.marginLeft = "84px";
-                pageContainer.style.marginLeft = "-100%";
-            } else {
-                hr.style.marginLeft = "168px";
-                pageContainer.style.marginLeft = "-200%";
-            }
         };
 
         // Storage functions
@@ -1106,6 +1003,7 @@ const app = createApp({
 
             // Initialize todo container height
             updateTodoContainerHeight();
+            window.addEventListener("resize", updateTodoContainerHeight);
         });
 
         // Return reactive state and methods
@@ -1165,6 +1063,9 @@ const app = createApp({
 
             // UI
             activeTab,
+            tabStyle,
+            settingsOpen,
+            todoOpen,
             openTab,
             removeOverlay,
             settingsTabs,
@@ -1180,44 +1081,3 @@ const app = createApp({
 
 // Mount the app
 app.mount("#main-container");
-
-// Window event listeners
-window.addEventListener("load", () => {
-    const todoWindowMedia = window.matchMedia("(max-height: 180px)");
-    const container = document.querySelector("#todo-container .container");
-    const taskContainer = document.querySelector(
-        "#todo-container .container #task-container"
-    );
-
-    if (todoWindowMedia.matches && container && taskContainer) {
-        container.style.top = "20px";
-        container.style.transform = "translateY(0)";
-        container.style.height = "calc(100% - 40px)";
-        taskContainer.style.overflowY = "scroll";
-        taskContainer.style.overflowX = "hidden";
-        taskContainer.style.height = "calc(100% - 50px)";
-    }
-});
-
-window.addEventListener("resize", () => {
-    const todoWindowMedia = window.matchMedia("(max-height: 180px)");
-    const container = document.querySelector("#todo-container .container");
-    const taskContainer = document.querySelector(
-        "#todo-container .container #task-container"
-    );
-
-    if (todoWindowMedia.matches && container && taskContainer) {
-        container.style.top = "20px";
-        container.style.transform = "translateY(0)";
-        container.style.height = "calc(100% - 40px)";
-        taskContainer.style.overflowY = "scroll";
-        taskContainer.style.overflowX = "hidden";
-        taskContainer.style.height = "calc(100% - 50px)";
-    } else if (container && taskContainer) {
-        container.style.top = "50%";
-        container.style.transform = "translateY(-50%)";
-        container.style.height = "auto";
-        taskContainer.style.overflow = "hidden";
-        taskContainer.style.height = "auto";
-    }
-});
