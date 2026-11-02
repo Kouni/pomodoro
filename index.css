@@ -90,7 +90,7 @@ a:visited {
 .underline,
 a.underline,
 a.underline:visited {
-    color: #d32f2f;
+    color: #fd4d4b;
     text-decoration: none;
     position: relative;
     display: inline-block;
@@ -1177,9 +1177,6 @@ body {
 #main-container.dark-theme {
     background: linear-gradient(135deg, #121212 0%, #1e1e1e 100%);
     color: #e1e1e1;
-}
-#main-container.dark-theme .underline {
-    color: #fd4d4b;
 }
 #main-container.dark-theme #button-container button.button {
     background-color: transparent !important;

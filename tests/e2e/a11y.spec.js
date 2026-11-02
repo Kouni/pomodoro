@@ -36,6 +36,13 @@ test("axe finds no violations in light mode", async ({ page, app }) => {
     await app.openSettings();
     await app.settingsTab("More settings");
     await page.getByLabel("Dark mode").uncheck();
+    // The Reset button's colour transitions for 200ms; let it settle, or
+    // axe samples a mid-transition grey and reports a false contrast failure.
+    await expect(
+        page
+            .locator("#add_page")
+            .getByRole("button", { name: "Reset to Default" })
+    ).toHaveCSS("color", "rgb(20, 20, 20)");
     expect(await runAxe(page)).toEqual([]);
     await app.closeSettings();
     expect(await runAxe(page, {})).toEqual([]);
