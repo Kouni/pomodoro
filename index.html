@@ -53,7 +53,7 @@
     </head>
     <body>
         <div id="main-container" v-cloak>
-            <div>
+            <div role="main">
                 <div id="button-icons">
                     <button id="settings" @click="openTab('settings')">
                         <img
@@ -134,6 +134,7 @@
                         <button
                             id="play"
                             class="button timer-button anim"
+                            :aria-label="playState ? 'Start timer' : 'Pause timer'"
                             @click="playFunc"
                         >
                             <div
@@ -153,7 +154,11 @@
                 </div>
             </div>
 
-            <div id="settings-container">
+            <div
+                id="settings-container"
+                role="complementary"
+                aria-label="Settings"
+            >
                 <div class="overlay" @click="removeOverlay('settings')"></div>
 
                 <div class="container" inert>
@@ -163,21 +168,21 @@
                             <li @click="settingsTabs('time')">
                                 <img
                                     src="assets/settings_hourglass.svg"
-                                    alt="Hourglass icon"
+                                    alt="Time settings"
                                 />
                             </li>
                             <!--                    <li @click="settingsTabs('audio')">&#128266;</li>-->
                             <li @click="settingsTabs('audio')">
                                 <img
                                     src="assets/settings_volume.svg"
-                                    alt="Speaker icon"
+                                    alt="Audio settings"
                                 />
                             </li>
                             <!--                    <li @click="settingsTabs('add')">💿</li>-->
                             <li @click="settingsTabs('add')">
                                 <img
                                     src="assets/settings_plus.svg"
-                                    alt="Additional icon"
+                                    alt="More settings"
                                 />
                             </li>
                             <hr />
@@ -194,6 +199,7 @@
                                 min="1"
                                 max="60"
                                 value="25"
+                                aria-label="Work minutes"
                                 v-model="workRange"
                                 @input="changeCountdown"
                             />
@@ -206,6 +212,7 @@
                                 min="1"
                                 max="10"
                                 value="5"
+                                aria-label="Short break minutes"
                                 v-model="sBreakRange"
                             />
 
@@ -217,6 +224,7 @@
                                 min="1"
                                 max="45"
                                 value="15"
+                                aria-label="Long break minutes"
                                 v-model="lBreakRange"
                             />
 
@@ -228,6 +236,7 @@
                                 min="1"
                                 max="10"
                                 value="4"
+                                aria-label="Rounds"
                                 v-model="roundRange"
                                 @input="changeRound"
                             /><br />
@@ -253,6 +262,7 @@
                                 <input
                                     class="toggle"
                                     type="checkbox"
+                                    aria-label="Music"
                                     v-model="isMusic"
                                     @change="musicState"
                                 />
@@ -266,6 +276,7 @@
                                 min="0"
                                 max="100"
                                 value="100"
+                                aria-label="Notification volume"
                                 v-model="soundVolume"
                             />
 
@@ -279,6 +290,7 @@
                                 min="0"
                                 max="100"
                                 value="75"
+                                aria-label="Music volume"
                                 v-model="musicVolume"
                                 @input="changeVolume"
                             />
@@ -346,6 +358,7 @@
                                 id="music-timing"
                                 disabled
                                 class="disabled"
+                                aria-label="Music timing"
                                 v-model="musicTiming"
                                 style="
                                     width: 70%;
@@ -390,6 +403,7 @@
                                 <input
                                     class="toggle"
                                     type="checkbox"
+                                    aria-label="Dark mode"
                                     v-model="darkMode"
                                     @change="toggleDarkMode"
                                 />
@@ -407,6 +421,7 @@
                                 <input
                                     class="toggle"
                                     type="checkbox"
+                                    aria-label="Browser notifications"
                                     v-model="enableNotifications"
                                     @change="handleNotificationToggle"
                                 />
@@ -424,6 +439,7 @@
                                 <input
                                     class="toggle"
                                     type="checkbox"
+                                    aria-label="Auto-start pomodoros"
                                     v-model="autoPomodoro"
                                 />
                             </div>
@@ -440,6 +456,7 @@
                                 <input
                                     class="toggle"
                                     type="checkbox"
+                                    aria-label="Auto-start breaks"
                                     v-model="autoBreak"
                                 />
                             </div>
@@ -457,6 +474,7 @@
                                 <input
                                     class="toggle"
                                     type="checkbox"
+                                    aria-label="Don't start auto-pomodoro if to-do list is empty"
                                     v-model="autoTodoEmpty"
                                 />
                             </div>
@@ -473,6 +491,7 @@
                                 <input
                                     class="toggle"
                                     type="checkbox"
+                                    aria-label="Infinite"
                                     v-model="infinite"
                                     @input="changeInfinite"
                                 />
@@ -489,7 +508,11 @@
                 </div>
             </div>
 
-            <div id="todo-container">
+            <div
+                id="todo-container"
+                role="complementary"
+                aria-label="To-do list"
+            >
                 <div class="overlay" @click="removeOverlay('todo')"></div>
 
                 <div class="container" inert>
@@ -532,6 +555,7 @@
                                 this.style.height =
                                     this.scrollHeight - 10 + 'px';
                             "
+                            aria-label="New task"
                             v-model="newTask"
                             @keydown.enter.prevent="addTask"
                         ></textarea>
