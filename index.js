@@ -94,6 +94,10 @@ const app = createApp({
             cafe: new Audio("assets/audio_cafe.mp3"),
             music: new Audio("assets/audio_music.mp3")
         };
+        // Music tracks are 25-28 MB each; fetch them on first play only.
+        Object.values(music).forEach((track) => {
+            track.preload = "none";
+        });
 
         // Notification state
         const notificationPermission = ref(

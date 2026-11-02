@@ -127,6 +127,9 @@ test("audio: all 7 tracks are created eagerly at startup", () => {
         /audio_(nature|rain|cafe|music)/.test(a.src)
     );
     assert.equal(music.length, 4);
+    assert.ok(music.every((a) => a.preload === "none"));
+    const effects = audios.instances.filter((a) => !music.includes(a));
+    assert.ok(effects.every((a) => a.preload === "auto"));
 });
 
 test("music toggle respects timing: work-only music stops during a break", (t) => {
