@@ -77,17 +77,15 @@ test("countdown is derived from wall clock, not tick count", (t) => {
     assert.equal(api.seconds.value, 59);
 });
 
-test("work round ends: sound at 0, transition to short break one tick later", (t) => {
+test("work round ends at 0: cue plays and the short break starts in the same tick", (t) => {
     const { api, document, audios, pressPlay } = bootShort(t);
     pressPlay();
-    tickSeconds(t, 60);
-    assert.equal(api.minutes.value, 0);
-    assert.equal(api.seconds.value, 0);
+    tickSeconds(t, 59);
     assert.equal(api.currentRound.value, 1);
-    assert.equal(api.isCountdown.value, true);
-    assert.deepEqual(audios.played, ["assets/audio_break.mp3"]);
+    assert.deepEqual(audios.played, []);
 
     tickSeconds(t, 1);
+    assert.deepEqual(audios.played, ["assets/audio_break.mp3"]);
     assert.equal(api.currentRound.value, 2);
     assert.equal(api.roundName.value, "Take a short break");
     assert.equal(api.shortRoundName.value, "Short break");
@@ -97,7 +95,7 @@ test("work round ends: sound at 0, transition to short break one tick later", (t
     assert.equal(document.title, "😴 01:00 - Pomodoro Timer");
 });
 
-test("throttled tab: a tick that skips past 0 transitions without playing a sound", (t) => {
+test("throttled tab: a tick that lands past 0 still plays the cue and transitions", (t) => {
     // Chrome aligns background setInterval wakeups to once per minute,
     // so the tick where remaining === 0 is usually never observed.
     const { api, audios, pressPlay } = bootShort(t);
@@ -106,7 +104,7 @@ test("throttled tab: a tick that skips past 0 transitions without playing a soun
     t.mock.timers.tick(45_000); // one wakeup, 15 s past the deadline
     assert.equal(api.currentRound.value, 2);
     assert.equal(api.roundName.value, "Take a short break");
-    assert.deepEqual(audios.played, []); // documents H3: end-of-round cue lost
+    assert.deepEqual(audios.played, ["assets/audio_break.mp3"]);
 });
 
 test("fast forward walks work → short → work → long → finished", (t) => {

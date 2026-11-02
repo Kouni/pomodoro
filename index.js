@@ -409,11 +409,10 @@ const app = createApp({
                         false
                     );
 
-                    if (newDate.value - nowDate.value === 0) {
+                    // <= 0, not === 0: a throttled background tab can skip
+                    // the exact tick on which the deadline passes.
+                    if (newDate.value - nowDate.value <= 0) {
                         soundEffect(getSoundEffectType());
-                    }
-
-                    if (newDate.value - nowDate.value < 0) {
                         clearInterval(timerInterval);
                         minutes.value = 0;
                         seconds.value = 0;
