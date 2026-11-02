@@ -44,5 +44,11 @@
     "engines": {
         "node": ">=26.13.0 <27",
         "npm": ">=8.0.0"
+    },
+    "pnpm": {
+        "overrides": {
+            "eslint>minimatch": "^11.0.1",
+            "@eslint/config-array>minimatch": "^11.0.1"
+        }
     }
 }

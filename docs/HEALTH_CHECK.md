@@ -276,9 +276,9 @@ Build：本專案無 build 步驟（靜態檔案直接部署），故「build �
 
 | 套件             | 公告                                                    | 嚴重度   | 路徑                                 | 原因                                                                                                                         |
 | ---------------- | ------------------------------------------------------- | -------- | ------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------- |
-| minimatch 10.2.x | GHSA-g3hv-75wg-m249（globparts 放大 DoS，修補 ≥11.0.1） | moderate | `eslint@10.14.0 > minimatch ^10.2.6` | eslint 10 最新版仍釘 `^10`，需上游更新。dev-only、需攻擊者控制 glob pattern 才可觸發；不建議用 `pnpm.overrides` 強制跨 major |
+| minimatch 10.2.x | GHSA-g3hv-75wg-m249（globparts 放大 DoS，修補 ≥11.0.1） | moderate | `eslint@10.14.0 > minimatch ^10.2.6`、`@eslint/config-array > minimatch` | **已於 §12.6 以 targeted override 解決**：eslint 10 最新版仍釘 `^10`，Dependabot 的 security update 因此在每次 push 後失敗 |
 
-Critical／High：0 剩餘。
+Critical／High：0 剩餘；override 後 `pnpm audit` 為 **No known vulnerabilities**。
 
 ## 8. 提案（未實作）
 
@@ -412,3 +412,11 @@ All matched files use Prettier code style!
 $ pnpm outdated
 (empty)
 ```
+
+### 12.6 Dependabot security update 失敗（override 解決）[verified]
+
+- **現象**：`main@0bfcdda` 推上後，Actions 內 `npm_and_yarn in /. for minimatch - Update #1675092915` 失敗；CI、CodeQL、Pages 三者皆成功。
+- **根因**（job log）：`security_update_not_possible` — `latest-resolvable-version: 10.2.6`、`lowest-non-vulnerable-version: 11.0.1`。eslint 10.14.0 與 `@eslint/config-array` 0.23.5 都釘 `minimatch ^10`，Dependabot 無法在不改 eslint 的前提下升到 11，因此每次 push 都會重試並失敗。
+- **處置**：`package.json` 加 `pnpm.overrides`：`"eslint>minimatch": "^11.0.1"`、`"@eslint/config-array>minimatch": "^11.0.1"`（只覆蓋這兩條路徑，不影響未來其他需要 minimatch 3/9 的套件）。可行性依據：兩個消費者都是 `require("minimatch")`，minimatch 11.0.4 仍提供 CJS 入口（`main: ./dist/commonjs/index.js`），engines `20 || >=22`。
+- **驗證**：`pnpm audit` → No known vulnerabilities；Node 22.23 與 26.13：ESLint 0 問題（ignores／glob 皆經 minimatch）、unit 39／39、e2e 26／26；`pnpm install --frozen-lockfile` 通過。
+- **殘餘風險**：這是跨 major 的 override，eslint 若未來依賴 minimatch 10 特有行為會在 lint 階段顯現；eslint 官方升到 minimatch 11 後即可移除 override。
