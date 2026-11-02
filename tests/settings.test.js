@@ -221,3 +221,20 @@ test("completeTask toggles and removeTask splices after its animation delay", (t
         ]
     );
 });
+
+test("side panels are inert while closed and interactive while open", () => {
+    const { api, panels } = createApp();
+    const settings = panels["#settings-container .container"];
+    const todo = panels["#todo-container .container"];
+    api.openTab("settings");
+    assert.equal(settings.inert, false);
+    assert.equal(settings.style.left, "20px");
+    api.removeOverlay("settings");
+    assert.equal(settings.inert, true);
+    assert.equal(settings.style.left, "-320px");
+    api.openTab("todo");
+    assert.equal(todo.inert, false);
+    api.removeOverlay("todo");
+    assert.equal(todo.inert, true);
+    assert.equal(todo.style.right, "-350px");
+});

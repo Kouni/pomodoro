@@ -91,10 +91,18 @@ export const createApp = ({ storage = {}, notification } = {}) => {
     }
 
     const playBtn = fakeEl();
+    const panels = {
+        "#settings-container .container": fakeEl(),
+        "#todo-container .container": fakeEl()
+    };
     const document = {
         title: "",
-        querySelector: (sel) =>
-            sel === "#button-container > #play > div" ? playBtn : fakeEl(),
+        querySelector: (sel) => {
+            if (sel === "#button-container > #play > div") {
+                return playBtn;
+            }
+            return panels[sel] || fakeEl();
+        },
         querySelectorAll: () => [],
         getElementsByClassName: () => []
     };
@@ -172,6 +180,7 @@ export const createApp = ({ storage = {}, notification } = {}) => {
     return {
         api,
         document,
+        panels,
         localStorage,
         bar,
         audios: FakeAudio,

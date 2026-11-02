@@ -920,6 +920,7 @@ const app = createApp({
                     overlay.classList.add("opacBg");
                 }
                 if (container) {
+                    container.inert = false;
                     container.style.left = "20px";
                 }
             } else {
@@ -931,6 +932,7 @@ const app = createApp({
                     overlay.classList.add("opacBg");
                 }
                 if (container) {
+                    container.inert = false;
                     container.style.right = "20px";
                 }
             }
@@ -946,6 +948,9 @@ const app = createApp({
                     overlay.classList.remove("opacBg");
                 }
                 if (container) {
+                    // Closed panels are off-canvas but still in the DOM; inert
+                    // keeps keyboard focus (and screen readers) out of them.
+                    container.inert = true;
                     container.style.left = "-320px";
                 }
             } else {
@@ -957,6 +962,7 @@ const app = createApp({
                     overlay.classList.remove("opacBg");
                 }
                 if (container) {
+                    container.inert = true;
                     container.style.right = "-350px";
                 }
             }

@@ -156,7 +156,7 @@
             <div id="settings-container">
                 <div class="overlay" @click="removeOverlay('settings')"></div>
 
-                <div class="container">
+                <div class="container" inert>
                     <nav>
                         <ul>
                             <!--                    <li @click="settingsTabs('time')">&#9203;</li>-->
@@ -492,7 +492,7 @@
             <div id="todo-container">
                 <div class="overlay" @click="removeOverlay('todo')"></div>
 
-                <div class="container">
+                <div class="container" inert>
                     <p v-if="Object.keys(tasks).length === 0">
                         You have no tasks to complete
                     </p>
