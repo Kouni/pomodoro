@@ -457,7 +457,7 @@ const app = createApp({
         };
 
         const startCountdown = () => {
-            let autoStart = true;
+            let autoStart;
 
             if (currentRound.value > totalRound.value) {
                 // Finished
