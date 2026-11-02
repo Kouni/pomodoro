@@ -1,7 +1,7 @@
-import { test, expect, AXE_PATH } from "./fixtures.js";
+import { test, expect } from "./fixtures.js";
 
 const runAxe = async (page, options = {}) => {
-    await page.addScriptTag({ path: AXE_PATH });
+    await page.addScriptTag({ url: "/__axe.js" });
     const violations = await page.evaluate(
         (opts) =>
             window.axe

@@ -80,6 +80,20 @@ test.describe("tampered CDN response", () => {
     });
 });
 
+test("ships a Content-Security-Policy and still mounts under it", async ({
+    page,
+    app
+}) => {
+    await app.goto({ clock: false });
+    const csp = await page.$eval(
+        'meta[http-equiv="Content-Security-Policy"]',
+        (e) => e.content
+    );
+    expect(csp).toContain("script-src 'self' https://unpkg.com");
+    expect(csp).toContain("object-src 'none'");
+    expect(await page.evaluate(() => typeof window.Vue)).toBe("object");
+});
+
 test("exposes landmarks and named controls", async ({ page, app }) => {
     await app.goto({ clock: false });
     await expect(page.getByRole("main")).toBeVisible();

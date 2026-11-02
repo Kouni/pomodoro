@@ -11,7 +11,7 @@ export const VUE_BUILD = readFileSync(
     require.resolve("vue/dist/vue.global.prod.js"),
     "utf8"
 );
-export const AXE_PATH = require.resolve("axe-core/axe.min.js");
+const AXE_SOURCE = readFileSync(require.resolve("axe-core/axe.min.js"), "utf8");
 export const CLOCK_START = new Date("2026-11-02T10:00:00Z");
 
 const text = (s) => s.replace(/\s+/g, "");
@@ -29,6 +29,14 @@ export const test = base.extend({
                     "content-type": "application/javascript",
                     "access-control-allow-origin": "*"
                 }
+            })
+        );
+        // axe is injected from a same-origin URL so the page's CSP stays on.
+        await page.route("**/__axe.js", (route) =>
+            route.fulfill({
+                status: 200,
+                body: AXE_SOURCE,
+                headers: { "content-type": "application/javascript" }
             })
         );
         await page.addInitScript(() => {

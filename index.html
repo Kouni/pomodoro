@@ -3,6 +3,12 @@
     <head>
         <!--    MAIN INFO    -->
         <meta charset="UTF-8" />
+        <!-- 'unsafe-eval' is required by Vue's in-browser template compiler;
+             'unsafe-inline' for styles covers the inline style attributes. -->
+        <meta
+            http-equiv="Content-Security-Policy"
+            content="default-src 'self'; script-src 'self' https://unpkg.com 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self'; font-src 'self'; media-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'"
+        />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <title>Pomodoro Timer</title>
 
@@ -561,11 +567,6 @@
                             rows="1"
                             maxlength="50"
                             spellcheck="false"
-                            oninput="
-                                this.style.height = '';
-                                this.style.height =
-                                    this.scrollHeight - 10 + 'px';
-                            "
                             aria-label="New task"
                             v-model="newTask"
                             @keydown.enter.prevent="addTask"
