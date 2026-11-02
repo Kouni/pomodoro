@@ -1339,3 +1339,13 @@ body {
         }
     }
 }
+
+/* Keep keyboard focus visible (WCAG 2.4.7); the outline: none resets above
+   only apply to pointer focus. !important beats the id-nested resets. */
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+    outline: 2px solid currentColor !important;
+    outline-offset: 2px;
+}
