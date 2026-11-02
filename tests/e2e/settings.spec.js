@@ -89,6 +89,10 @@ test("dark mode toggle switches the theme and persists", async ({
     await app.settingsTab("More settings");
     await page.getByLabel("Dark mode").uncheck();
     await expect(page.locator("#main-container")).not.toHaveClass(/dark-theme/);
+    await expect(page.locator("html")).toHaveClass(/light-theme/);
+    expect(await page.$eval('meta[name="theme-color"]', (e) => e.content)).toBe(
+        "#f43147"
+    );
 
     await page.reload();
     await expect(page.locator(".title h1")).toHaveText("Pomodoro Timer");

@@ -31,16 +31,12 @@ test("axe finds no violations in the main view, settings and todo", async ({
     expect(await runAxe(page)).toEqual([]);
 });
 
-test("axe finds no violations in light mode (contrast of Reset pending, see U5)", async ({
-    page,
-    app
-}) => {
+test("axe finds no violations in light mode", async ({ page, app }) => {
     await app.goto({ clock: false });
     await app.openSettings();
     await app.settingsTab("More settings");
     await page.getByLabel("Dark mode").uncheck();
-    const options = { rules: { "color-contrast": { enabled: false } } };
-    expect(await runAxe(page, options)).toEqual([]);
+    expect(await runAxe(page)).toEqual([]);
     await app.closeSettings();
     expect(await runAxe(page, {})).toEqual([]);
 });

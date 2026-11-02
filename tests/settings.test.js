@@ -247,3 +247,29 @@ test("settingsTabs tracks the active tab for aria-selected", () => {
     api.settingsTabs("add");
     assert.equal(api.activeTab.value, "add");
 });
+
+test("theme is applied to the root element, main container and theme-color", () => {
+    const { api, document, panels, flushWatchers } = createApp();
+    const meta = panels['meta[name="theme-color"]'];
+    assert.equal(
+        document.documentElement.classList.contains("light-theme"),
+        false
+    );
+    assert.equal(
+        panels["#main-container"].classList.contains("dark-theme"),
+        true
+    );
+    assert.equal(meta.getAttribute("content"), "#121212");
+
+    api.darkMode.value = false;
+    flushWatchers();
+    assert.equal(
+        document.documentElement.classList.contains("light-theme"),
+        true
+    );
+    assert.equal(
+        panels["#main-container"].classList.contains("dark-theme"),
+        false
+    );
+    assert.equal(meta.getAttribute("content"), "#f43147");
+});

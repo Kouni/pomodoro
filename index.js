@@ -1149,17 +1149,21 @@ const app = createApp({
             { deep: true }
         );
 
-        // Watch for dark mode changes
-        watch(darkMode, (newValue) => {
+        // Theme lives outside the mounted template: root element class,
+        // page background and the browser chrome colour.
+        const applyTheme = () => {
+            const dark = darkMode.value;
+            document.documentElement.classList.toggle("light-theme", !dark);
+            const meta = document.querySelector('meta[name="theme-color"]');
+            if (meta) {
+                meta.setAttribute("content", dark ? "#121212" : "#f43147");
+            }
             const mainContainer = document.querySelector("#main-container");
             if (mainContainer) {
-                if (newValue) {
-                    mainContainer.classList.add("dark-theme");
-                } else {
-                    mainContainer.classList.remove("dark-theme");
-                }
+                mainContainer.classList.toggle("dark-theme", dark);
             }
-        });
+        };
+        watch(darkMode, applyTheme);
 
         // Watch for music timing changes to stop/start music accordingly
         watch(musicTiming, () => {
@@ -1205,18 +1209,11 @@ const app = createApp({
                 }
             }
 
+            applyTheme();
+
             // Initialize music UI state
             nextTick(() => {
                 musicState();
-
-                // Apply dark mode if enabled
-                if (darkMode.value) {
-                    const mainContainer =
-                        document.querySelector("#main-container");
-                    if (mainContainer) {
-                        mainContainer.classList.add("dark-theme");
-                    }
-                }
             });
 
             // Initialize todo container height

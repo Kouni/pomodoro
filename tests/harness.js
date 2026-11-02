@@ -7,13 +7,25 @@ const source = readFileSync(new URL("../index.js", import.meta.url), "utf8");
 
 const fakeEl = () => {
     const classes = new Set();
+    const attrs = {};
     return {
         classes,
         classList: {
             add: (...c) => c.forEach((x) => classes.add(x)),
             remove: (...c) => c.forEach((x) => classes.delete(x)),
-            contains: (c) => classes.has(c)
+            contains: (c) => classes.has(c),
+            toggle: (c, force) => {
+                if (force === undefined ? !classes.has(c) : force) {
+                    classes.add(c);
+                } else {
+                    classes.delete(c);
+                }
+                return classes.has(c);
+            }
         },
+        attrs,
+        setAttribute: (k, v) => (attrs[k] = String(v)),
+        getAttribute: (k) => (k in attrs ? attrs[k] : null),
         style: {},
         disabled: false,
         value: undefined,
@@ -97,10 +109,13 @@ export const createApp = ({
     const playBtn = fakeEl();
     const panels = {
         "#settings-container .container": fakeEl(),
-        "#todo-container .container": fakeEl()
+        "#todo-container .container": fakeEl(),
+        "#main-container": fakeEl(),
+        'meta[name="theme-color"]': fakeEl()
     };
     const document = {
         title: "",
+        documentElement: fakeEl(),
         querySelector: (sel) => {
             if (sel === "#button-container > #play > div") {
                 return playBtn;

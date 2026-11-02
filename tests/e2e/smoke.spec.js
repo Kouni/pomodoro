@@ -19,6 +19,13 @@ test("mounts with defaults and does not fetch music on load", async ({
     expect(await app.timer()).toBe("25:00");
     expect(await app.dots()).toEqual(["-", "-", "-", "-"]);
     await expect(page.locator("#main-container")).toHaveClass(/dark-theme/);
+    await expect(page.locator("html")).not.toHaveClass(/light-theme/);
+    expect(await page.$eval('meta[name="theme-color"]', (e) => e.content)).toBe(
+        "#121212"
+    );
+    expect(
+        await page.$eval("html", (e) => getComputedStyle(e).backgroundColor)
+    ).toBe("rgb(18, 18, 18)");
     await expect(page.locator("#main-container")).not.toHaveAttribute(
         "v-cloak",
         ""

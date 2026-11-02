@@ -115,7 +115,7 @@ a:visited {
 .underline,
 a.underline,
 a.underline:visited {
-    color: $sliderR2;
+    color: #d32f2f; // 4.98:1 on the white light-theme panel
     text-decoration: none;
     position: relative;
     display: inline-block;
@@ -187,6 +187,14 @@ button {
     user-select: none;
 }
 
+// The page background behind #main-container follows the theme so
+// nothing white shows through; dark is the default (see applyTheme).
+html {
+    background-color: $dark-surface;
+    &.light-theme {
+        background-color: $gColor1;
+    }
+}
 html,
 body {
     margin: 0;
@@ -1132,6 +1140,10 @@ body {
         $dark-surface-variant 100%
     );
     color: $dark-on-surface;
+
+    .underline {
+        color: $sliderR2;
+    }
 
     #button-container button.button {
         background-color: transparent !important;
