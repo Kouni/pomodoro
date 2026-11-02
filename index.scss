@@ -388,6 +388,7 @@ body {
 
     .container {
         width: 320px;
+        max-width: calc(100vw - 40px);
         z-index: 11;
         position: absolute;
         top: 50%;
@@ -435,7 +436,7 @@ body {
             transition: margin-left 0.35s ease-in-out;
             border-radius: 15px;
             > div {
-                width: 320px;
+                width: 100%;
                 padding: 20px 0;
                 position: absolute;
                 top: 50%;
@@ -675,6 +676,7 @@ body {
         overflow: hidden;
         min-height: 51px;
         width: 300px;
+        max-width: calc(100vw - 40px);
 
         p:not([class]):not([id]) {
             margin: 22px auto 16px;

@@ -54,13 +54,7 @@ for (const viewport of [
         ).toBe(1);
         const settings = await app.settingsPanel.boundingBox();
         expect(settings.x).toBeGreaterThanOrEqual(0);
-        if (viewport.width >= 340) {
-            // The settings panel is a fixed 320px with a 20px inset, so it is
-            // clipped on narrower screens (HEALTH_CHECK.md U10).
-            expect(settings.x + settings.width).toBeLessThanOrEqual(
-                viewport.width
-            );
-        }
+        expect(settings.x + settings.width).toBeLessThanOrEqual(viewport.width);
         await app.closeSettings();
 
         await app.openTodo();
