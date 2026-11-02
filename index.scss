@@ -1363,3 +1363,18 @@ select:focus-visible {
     outline: 2px solid currentColor !important;
     outline-offset: 2px;
 }
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+    // These carry !important transitions of their own (btnHover mixin).
+    button.button,
+    #todo-container .container button.button {
+        transition: none !important;
+    }
+}

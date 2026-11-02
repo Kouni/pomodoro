@@ -112,3 +112,33 @@ test("keyboard focus is visible", async ({ page, app }) => {
     await expect(app.playButton).toHaveCSS("outline-style", "solid");
     await expect(app.playButton).toHaveCSS("outline-width", "2px");
 });
+
+test("prefers-reduced-motion stops animations but the bar still advances", async ({
+    page,
+    app
+}) => {
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await app.goto();
+    await app.playButton.click();
+    await app.tick(1000);
+    // Under the fake clock finished 0.01ms transitions can linger, so check
+    // that nothing long-running or repeating exists rather than "none".
+    const longRunning = await page.evaluate(
+        () =>
+            document.getAnimations().filter((a) => {
+                const timing = a.effect.getTiming();
+                return timing.duration > 1 || timing.iterations > 1;
+            }).length
+    );
+    expect(longRunning).toBe(0);
+    const before = await page.$eval(
+        "#timer-path",
+        (e) => e.style.strokeDashoffset
+    );
+    await app.tick(1000);
+    const after = await page.$eval(
+        "#timer-path",
+        (e) => e.style.strokeDashoffset
+    );
+    expect(after).not.toBe(before);
+});

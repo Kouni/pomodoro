@@ -274,3 +274,16 @@ test("infinite mode cycles rounds without finishing", (t) => {
     assert.equal(api.isCountdown.value, true);
     assert.equal(api.roundName.value, "Focus on work");
 });
+
+test("reduced motion steps the progress bar instead of tweening it", (t) => {
+    useTimers(t);
+    const { api, bar, pressPlay } = createApp({ reducedMotion: true });
+    api.workRange.value = 1;
+    pressPlay();
+    assert.equal(
+        bar.calls.some((c) => c[0] === "animate"),
+        false
+    );
+    tickSeconds(t, 15);
+    assert.deepEqual(bar.calls.at(-1), ["set", 45 / 60]);
+});

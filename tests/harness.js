@@ -74,7 +74,11 @@ class FakePath {
  * @param {Record<string,string>} [opts.storage] pre-seeded localStorage
  * @param {object|null} [opts.notification] fake Notification (null = absent)
  */
-export const createApp = ({ storage = {}, notification } = {}) => {
+export const createApp = ({
+    storage = {},
+    notification,
+    reducedMotion = false
+} = {}) => {
     const localStorage = fakeStorage();
     Object.entries(storage).forEach(([k, v]) => localStorage.setItem(k, v));
 
@@ -109,7 +113,9 @@ export const createApp = ({ storage = {}, notification } = {}) => {
     const window = {
         addEventListener() {},
         focus() {},
-        matchMedia: () => ({ matches: false })
+        matchMedia: (query) => ({
+            matches: reducedMotion && query.includes("prefers-reduced-motion")
+        })
     };
     if (Notification) {
         window.Notification = Notification;

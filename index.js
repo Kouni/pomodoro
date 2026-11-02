@@ -47,6 +47,13 @@ const updatePageTitle = (
 
 // Global state
 let timerBar;
+const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+// With reduced motion the tick handler steps the bar instead of tweening.
+const animateBar = (durationMs) => {
+    if (!reducedMotion.matches) {
+        timerBar.animate(0, { duration: durationMs });
+    }
+};
 
 // Main Vue application
 const app = createApp({
@@ -407,6 +414,12 @@ const app = createApp({
                     minutes.value =
                         Math.trunc((newDate.value - nowDate.value) / 60) % 60;
                     seconds.value = (newDate.value - nowDate.value) % 60;
+                    if (reducedMotion.matches) {
+                        timerBar.set(
+                            Math.max(0, newDate.value - nowDate.value) /
+                                totalTime.value
+                        );
+                    }
 
                     // Update page title based on current mode
                     const isWork = roundName.value === ROUND_NAMES[0];
@@ -564,7 +577,7 @@ const app = createApp({
             );
 
             if (currentRound.value === 1 || autoStart) {
-                timerBar.animate(0, { duration: totalTime.value * 1000 + 10 });
+                animateBar(totalTime.value * 1000 + 10);
                 countDownTimer();
             } else {
                 playState.value = true;
@@ -584,9 +597,7 @@ const app = createApp({
                     newDate.value =
                         nowDate.value + minutes.value * 60 + seconds.value;
                     countDownTimer();
-                    timerBar.animate(0, {
-                        duration: (newDate.value - nowDate.value) * 1000 + 10
-                    });
+                    animateBar((newDate.value - nowDate.value) * 1000 + 10);
 
                     if (isMusic.value && !musicPlaying.value) {
                         const isWork = roundName.value === ROUND_NAMES[0];
