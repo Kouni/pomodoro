@@ -49,6 +49,14 @@ export default [
         }
     },
     {
+        // Node-side files (tests, tooling) are ES modules.
+        files: ["tests/**/*.js", "eslint.config.js"],
+        languageOptions: {
+            sourceType: "module",
+            globals: globals.node
+        }
+    },
+    {
         ignores: [
             "node_modules/**",
             "assets/**",

@@ -11,7 +11,7 @@
         "serve": "http-server -p 8080",
         "check": "pnpm run lint && pnpm run format",
         "validate": "./validate-simple.sh",
-        "test": "pnpm run validate"
+        "test": "node --test \"tests/**/*.test.js\""
     },
     "keywords": [
         "pomodoro",
