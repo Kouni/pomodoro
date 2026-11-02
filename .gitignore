@@ -275,3 +275,9 @@ $RECYCLE.BIN/
 *.lnk
 
 # End of https://www.toptal.com/developers/gitignore/api/windows,webstorm,vue,vuejs,node
+
+### Playwright ###
+test-results/
+playwright-report/
+blob-report/
+playwright/.cache/

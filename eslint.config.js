@@ -50,10 +50,11 @@ export default [
     },
     {
         // Node-side files (tests, tooling) are ES modules.
-        files: ["tests/**/*.js", "eslint.config.js"],
+        files: ["tests/**/*.js", "eslint.config.js", "playwright.config.js"],
         languageOptions: {
             sourceType: "module",
-            globals: globals.node
+            // tests run in Node but evaluate callbacks inside the browser
+            globals: { ...globals.node, ...globals.browser }
         }
     },
     {

@@ -11,7 +11,8 @@
         "serve": "http-server -p 8080",
         "check": "pnpm run lint && pnpm run format",
         "validate": "./validate-simple.sh",
-        "test": "node --test \"tests/**/*.test.js\""
+        "test": "node --test \"tests/**/*.test.js\"",
+        "test:e2e": "playwright test"
     },
     "keywords": [
         "pomodoro",
@@ -20,15 +21,19 @@
         "task-management",
         "vue"
     ],
+    "packageManager": "pnpm@10.28.0",
     "author": "Kouni",
     "license": "MIT",
     "devDependencies": {
         "@eslint/js": "^10.0.1",
+        "@playwright/test": "1.64.1",
+        "axe-core": "4.14.0",
         "eslint": "^10.14.0",
         "eslint-config-prettier": "^10.1.8",
         "globals": "^17.14.0",
         "http-server": "^14.1.1",
-        "prettier": "^3.9.10"
+        "prettier": "^3.9.10",
+        "vue": "3.5.44"
     },
     "browserslist": [
         "> 1%",
@@ -37,7 +42,7 @@
         "not ie 11"
     ],
     "engines": {
-        "node": ">=20.19.0",
+        "node": ">=26.13.0 <27",
         "npm": ">=8.0.0"
     }
 }

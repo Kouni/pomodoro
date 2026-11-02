@@ -1,0 +1,26 @@
+import { defineConfig, devices } from "@playwright/test";
+
+const BASE_URL = "http://127.0.0.1:8080/";
+
+export default defineConfig({
+    testDir: "tests/e2e",
+    fullyParallel: true,
+    forbidOnly: !!process.env.CI,
+    retries: process.env.CI ? 1 : 0,
+    reporter: process.env.CI ? [["list"], ["html", { open: "never" }]] : "list",
+    use: {
+        baseURL: BASE_URL,
+        trace: "retain-on-failure",
+        // Point at a pre-installed Chromium instead of the version-matched
+        // download (sandboxes without network); unset in CI.
+        launchOptions: process.env.PW_CHROMIUM_PATH
+            ? { executablePath: process.env.PW_CHROMIUM_PATH }
+            : {}
+    },
+    projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
+    webServer: {
+        command: "pnpm exec http-server -p 8080 -s -c-1",
+        url: `${BASE_URL}index.html`,
+        reuseExistingServer: !process.env.CI
+    }
+});
