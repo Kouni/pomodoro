@@ -78,6 +78,7 @@ const app = createApp({
         const newDate = ref(0);
         const totalTime = ref(0);
         const roundName = ref("");
+        const finished = ref(false);
         let timerInterval = null;
 
         // Settings state
@@ -141,6 +142,32 @@ const app = createApp({
             }
             return "";
         });
+
+        // Round indicator: "process" = work round in progress, "active" =
+        // completed work round, "" = not reached yet (or idle).
+        const dotClass = (i) => {
+            if (finished.value) {
+                return "active";
+            }
+            if (!isCountdown.value && currentRound.value === 1) {
+                return "";
+            }
+            const workIndex = Math.ceil(currentRound.value / 2);
+            if (i < workIndex) {
+                return "active";
+            }
+            if (i === workIndex) {
+                return currentRound.value % 2 === 1 ? "process" : "active";
+            }
+            return "";
+        };
+
+        const shouldPlayMusic = () => {
+            const isWork = roundName.value === ROUND_NAMES[0];
+            return isWork
+                ? ["work", "both"].includes(musicTiming.value)
+                : ["breaks", "both"].includes(musicTiming.value);
+        };
 
         // Notification methods
         const requestNotificationPermission = async () => {
@@ -271,19 +298,8 @@ const app = createApp({
                     musicTiming.style.color = "#141414";
                     musicTiming.style.cursor = "pointer";
                 }
-                // Only start music if timing conditions are met
-                if (isCountdown.value) {
-                    const isWork = roundName.value === ROUND_NAMES[0];
-                    const shouldPlayMusic =
-                        (isWork &&
-                            (musicTiming.value === "work" ||
-                                musicTiming.value === "both")) ||
-                        (!isWork &&
-                            (musicTiming.value === "breaks" ||
-                                musicTiming.value === "both"));
-                    if (shouldPlayMusic) {
-                        musicOn(musicPref.value);
-                    }
+                if (isCountdown.value && shouldPlayMusic()) {
+                    musicOn(musicPref.value);
                 }
             } else {
                 slider.classList.add("disabled");
@@ -316,19 +332,8 @@ const app = createApp({
                 musicPref.value = fx;
             }
 
-            // Check if music should play based on timing settings
-            if (isCountdown.value) {
-                const isWork = roundName.value === ROUND_NAMES[0];
-                const shouldPlayMusic =
-                    (isWork &&
-                        (musicTiming.value === "work" ||
-                            musicTiming.value === "both")) ||
-                    (!isWork &&
-                        (musicTiming.value === "breaks" ||
-                            musicTiming.value === "both"));
-                if (!shouldPlayMusic) {
-                    return; // Don't play music if timing conditions aren't met
-                }
+            if (isCountdown.value && !shouldPlayMusic()) {
+                return;
             }
 
             musicPlaying.value = true;
@@ -374,16 +379,7 @@ const app = createApp({
             minutes.value = workRange.value;
             seconds.value = 0;
             playState.value = true;
-
-            // Reset round indicators (only if not in infinite mode)
-            if (!infinite.value) {
-                document
-                    .querySelectorAll("#rounds-container li")
-                    .forEach((el) => {
-                        el.classList.remove("process", "active");
-                    });
-            }
-
+            finished.value = false;
             isCountdown.value = false;
             isPaused.value = false;
             currentRound.value = 1;
@@ -433,20 +429,6 @@ const app = createApp({
             }, 1000);
         };
 
-        const updateRoundIndicator = () => {
-            // Only update round indicators if not in infinite mode
-            if (!infinite.value) {
-                const roundIndex = Math.floor(currentRound.value / 2);
-                const roundEl = document.querySelector(
-                    `#rounds-container li:nth-child(${roundIndex})`
-                );
-                if (roundEl) {
-                    roundEl.classList.remove("process");
-                    roundEl.classList.add("active");
-                }
-            }
-        };
-
         const handleMusicForBreak = () => {
             if (musicTiming.value === "work") {
                 // Only during work - stop music during breaks
@@ -472,14 +454,7 @@ const app = createApp({
                 clearInterval(timerInterval);
                 playState.value = true;
                 isCountdown.value = false;
-                if (!infinite.value) {
-                    document
-                        .querySelectorAll("#rounds-container li")
-                        .forEach((el) => {
-                            el.classList.remove("process");
-                            el.classList.add("active");
-                        });
-                }
+                finished.value = true;
                 timerBar.set(0);
                 if (musicPlaying.value) {
                     musicOn("");
@@ -501,7 +476,6 @@ const app = createApp({
                     minutes.value = lBreakRange.value;
                     totalTime.value = lBreakRange.value * 60;
                     roundName.value = ROUND_NAMES[2];
-                    updateRoundIndicator();
                     handleMusicForBreak();
                 }
             } else if (currentRound.value % 2 === 0) {
@@ -510,9 +484,6 @@ const app = createApp({
                 minutes.value = sBreakRange.value;
                 totalTime.value = sBreakRange.value * 60;
                 roundName.value = ROUND_NAMES[1];
-                if (!infinite.value) {
-                    updateRoundIndicator();
-                }
                 handleMusicForBreak();
             } else {
                 // Work
@@ -523,14 +494,6 @@ const app = createApp({
                 minutes.value = workRange.value;
                 totalTime.value = workRange.value * 60;
                 roundName.value = ROUND_NAMES[0];
-                if (!infinite.value) {
-                    const roundEl = document.querySelector(
-                        `#rounds-container li:nth-child(${(currentRound.value + 1) / 2})`
-                    );
-                    if (roundEl) {
-                        roundEl.classList.add("process");
-                    }
-                }
                 // Handle music for work mode
                 if (musicTiming.value === "breaks") {
                     // Only during breaks - stop music during work
@@ -572,12 +535,10 @@ const app = createApp({
         };
 
         const playFunc = () => {
-            playState.value = !playState.value;
-            const playBtn = document.querySelector(
-                "#button-container > #play > div"
-            );
+            const starting = playState.value; // play icon was showing
+            playState.value = !starting;
 
-            if (playBtn.classList.contains("play")) {
+            if (starting) {
                 if (isCountdown.value) {
                     isPaused.value = false;
                     nowDate.value = Math.trunc(new Date().getTime() / 1000);
@@ -586,27 +547,17 @@ const app = createApp({
                     countDownTimer();
                     animateBar((newDate.value - nowDate.value) * 1000 + 10);
 
-                    if (isMusic.value && !musicPlaying.value) {
-                        const isWork = roundName.value === ROUND_NAMES[0];
-                        const shouldPlayMusic =
-                            (isWork &&
-                                (musicTiming.value === "work" ||
-                                    musicTiming.value === "both")) ||
-                            (!isWork &&
-                                (musicTiming.value === "breaks" ||
-                                    musicTiming.value === "both"));
-                        if (shouldPlayMusic) {
-                            musicOn(musicPref.value);
-                        }
+                    if (
+                        isMusic.value &&
+                        !musicPlaying.value &&
+                        shouldPlayMusic()
+                    ) {
+                        musicOn(musicPref.value);
                     }
                 } else {
                     currentRound.value = 1;
+                    finished.value = false;
                     if (!infinite.value) {
-                        document
-                            .querySelectorAll("#rounds-container li")
-                            .forEach((el) => {
-                                el.classList.remove("active");
-                            });
                         totalRound.value = roundRange.value * 2;
                     }
                     // First user gesture: ask for notification permission here
@@ -1119,19 +1070,10 @@ const app = createApp({
         watch(musicTiming, () => {
             if (isMusic.value) {
                 if (isCountdown.value) {
-                    const isWork = roundName.value === ROUND_NAMES[0];
-                    const shouldPlayMusic =
-                        (isWork &&
-                            (musicTiming.value === "work" ||
-                                musicTiming.value === "both")) ||
-                        (!isWork &&
-                            (musicTiming.value === "breaks" ||
-                                musicTiming.value === "both"));
-
-                    if (shouldPlayMusic && !musicPlaying.value) {
-                        musicOn(musicPref.value); // Start music if conditions are now met
-                    } else if (!shouldPlayMusic && musicPlaying.value) {
-                        musicOn(""); // Stop music if timing conditions no longer met
+                    if (shouldPlayMusic() && !musicPlaying.value) {
+                        musicOn(musicPref.value);
+                    } else if (!shouldPlayMusic() && musicPlaying.value) {
+                        musicOn("");
                     }
                 } else {
                     // If no timer is running, stop music if set to only play during breaks
@@ -1177,6 +1119,7 @@ const app = createApp({
             currentRound,
             totalRound,
             roundName,
+            dotClass,
             resetTimer,
             playFunc,
             fastForwardTimer,

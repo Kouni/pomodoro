@@ -287,3 +287,24 @@ test("reduced motion steps the progress bar instead of tweening it", (t) => {
     tickSeconds(t, 15);
     assert.deepEqual(bar.calls.at(-1), ["set", 45 / 60]);
 });
+
+test("round indicator classes are derived from the timer state", (t) => {
+    const { api, pressPlay } = bootShort(t);
+    const dots = () => [1, 2].map((i) => api.dotClass(i));
+    assert.deepEqual(dots(), ["", ""]);
+    pressPlay();
+    assert.deepEqual(dots(), ["process", ""]);
+    tickSeconds(t, 60);
+    assert.deepEqual(dots(), ["active", ""]);
+    tickSeconds(t, 60);
+    assert.deepEqual(dots(), ["active", "process"]);
+    tickSeconds(t, 60);
+    assert.deepEqual(dots(), ["active", "active"]);
+    tickSeconds(t, 120);
+    assert.equal(api.isCountdown.value, false);
+    assert.deepEqual(dots(), ["active", "active"]);
+    pressPlay();
+    assert.deepEqual(dots(), ["process", ""]);
+    api.resetTimer();
+    assert.deepEqual(dots(), ["", ""]);
+});

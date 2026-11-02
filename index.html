@@ -110,7 +110,11 @@
                     </div>
                     <div id="rounds-container" v-show="!infinite">
                         <ul>
-                            <li v-for="i in parseInt(roundRange)" :key="i">
+                            <li
+                                v-for="i in parseInt(roundRange)"
+                                :key="i"
+                                :class="dotClass(i)"
+                            >
                                 •
                             </li>
                         </ul>
