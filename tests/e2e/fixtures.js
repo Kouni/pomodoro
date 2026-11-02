@@ -31,13 +31,6 @@ export const test = base.extend({
                 }
             })
         );
-        await page.route("**/fonts.googleapis.com/**", (route) =>
-            route.fulfill({
-                status: 200,
-                body: "",
-                headers: { "content-type": "text/css" }
-            })
-        );
         await page.addInitScript(() => {
             window.__audios = [];
             const Original = window.Audio;

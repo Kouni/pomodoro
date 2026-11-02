@@ -5,9 +5,13 @@ test("mounts with defaults and does not fetch music on load", async ({
     app
 }) => {
     const media = [];
+    const external = [];
     page.on("response", (r) => {
         if (/\.mp3$/.test(r.url())) {
             media.push(r.url().split("/").pop());
+        }
+        if (!r.url().startsWith("http://127.0.0.1:8080/")) {
+            external.push(r.url());
         }
     });
     await app.goto({ clock: false });
@@ -24,6 +28,10 @@ test("mounts with defaults and does not fetch music on load", async ({
         "audio_break.mp3",
         "audio_finish.mp3",
         "audio_work.mp3"
+    ]);
+    // Vue from the pinned CDN URL is the only third-party request.
+    expect(external).toEqual([
+        "https://unpkg.com/vue@3.5.44/dist/vue.global.prod.js"
     ]);
     const audios = await app.audios();
     expect(
