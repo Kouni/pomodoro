@@ -104,6 +104,12 @@ export const createApp = ({
             { permission: "default", requestPermission: async () => "denied" },
             notification
         );
+        const request = Notification.requestPermission;
+        Notification.requests = 0;
+        Notification.requestPermission = async () => {
+            Notification.requests++;
+            return request();
+        };
     }
 
     const playBtn = fakeEl();
@@ -202,6 +208,7 @@ export const createApp = ({
         api,
         document,
         panels,
+        notification: Notification,
         localStorage,
         bar,
         audios: FakeAudio,

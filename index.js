@@ -45,6 +45,14 @@ const updatePageTitle = (
     }
 };
 
+// Autoplay policy may reject play(); audio cues are best effort.
+const playSafely = (audio) => {
+    const result = audio.play();
+    if (result && typeof result.catch === "function") {
+        result.catch(() => {});
+    }
+};
+
 // Global state
 let timerBar;
 const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -90,9 +98,10 @@ const app = createApp({
 
         // Audio state
         const musicPlaying = ref(false);
+        // Keyed by what the cue announces, not by the round that just ended.
         const sound = {
-            work: new Audio("assets/audio_break.mp3"),
-            break: new Audio("assets/audio_work.mp3"),
+            breakStart: new Audio("assets/audio_break.mp3"),
+            workStart: new Audio("assets/audio_work.mp3"),
             finish: new Audio("assets/audio_finish.mp3")
         };
         const music = {
@@ -145,32 +154,6 @@ const app = createApp({
                     // For Chrome/Brave compatibility, ensure we handle the permission request properly
                     const permission = await Notification.requestPermission();
                     notificationPermission.value = permission;
-
-                    // Test notification to ensure it works in Chrome/Brave
-                    if (permission === "granted") {
-                        try {
-                            const testNotification = new Notification(
-                                "Pomodoro Timer",
-                                {
-                                    body: "Notifications enabled successfully!",
-                                    icon: "assets/favicon/favicon-32x32.png",
-                                    tag: "test-notification",
-                                    silent: false
-                                }
-                            );
-
-                            setTimeout(() => {
-                                try {
-                                    testNotification.close();
-                                } catch (_e) {
-                                    // Ignore errors
-                                }
-                            }, 3000);
-                        } catch (_e) {
-                            // Test notification failed - ignore
-                        }
-                    }
-
                     return permission === "granted";
                 } catch (_error) {
                     return false;
@@ -229,7 +212,7 @@ const app = createApp({
             });
 
             sound[fx].volume = soundVolume.value / 100;
-            sound[fx].play();
+            playSafely(sound[fx]);
 
             // Show notification based on timer state (only if showNotification is true)
             if (
@@ -242,10 +225,10 @@ const app = createApp({
                 if (fx === "finish") {
                     title = "Pomodoro Session Complete!";
                     message = "All rounds completed. Great job!";
-                } else if (fx === "work") {
+                } else if (fx === "breakStart") {
                     title = "Break Time!";
                     message = "Time to take a well-deserved break.";
-                } else if (fx === "break") {
+                } else if (fx === "workStart") {
                     title = "Work Time!";
                     message = "Break's over. Time to focus and get productive!";
                 }
@@ -346,7 +329,7 @@ const app = createApp({
 
             musicPlaying.value = true;
             music[musicPref.value].muted = false;
-            music[musicPref.value].play();
+            playSafely(music[musicPref.value]);
 
             if (fx === "nature") {
                 music[musicPref.value].volume = 0;
@@ -372,7 +355,7 @@ const app = createApp({
             ) {
                 return "finish";
             }
-            return currentRound.value % 2 === 0 ? "break" : "work";
+            return currentRound.value % 2 === 0 ? "workStart" : "breakStart";
         };
 
         const resetTimer = () => {
@@ -622,6 +605,14 @@ const app = createApp({
                             });
                         totalRound.value = roundRange.value * 2;
                     }
+                    // First user gesture: ask for notification permission here
+                    // rather than at page load, which browsers quietly suppress.
+                    if (
+                        enableNotifications.value &&
+                        notificationPermission.value === "default"
+                    ) {
+                        requestNotificationPermission();
+                    }
                     startCountdown();
                 }
             } else {
@@ -697,10 +688,6 @@ const app = createApp({
                 }
                 changeRound();
             }
-        };
-
-        const toggleDarkMode = () => {
-            // Dark mode is automatically saved via watcher
         };
 
         const handleNotificationToggle = async () => {
@@ -1043,22 +1030,22 @@ const app = createApp({
                 typeof Storage !== "undefined" &&
                 localStorage.getItem("roundRange") !== null
             ) {
-                roundRange.value = parseInt(localStorage.getItem("roundRange"));
-                workRange.value = parseInt(localStorage.getItem("workRange"));
-                minutes.value = parseInt(localStorage.getItem("workRange"));
-                sBreakRange.value = parseInt(
-                    localStorage.getItem("sBreakRange")
-                );
-                lBreakRange.value = parseInt(
-                    localStorage.getItem("lBreakRange")
-                );
-                soundVolume.value = parseInt(
-                    localStorage.getItem("soundVolume")
-                );
-                musicVolume.value = parseInt(
-                    localStorage.getItem("musicVolume")
-                );
-                musicPref.value = localStorage.getItem("musicPref");
+                // A corrupt number would give a NaN deadline and a timer that never ends.
+                const storedInt = (key, fallback) => {
+                    const n = parseInt(localStorage.getItem(key));
+                    return Number.isFinite(n) ? n : fallback;
+                };
+                roundRange.value = storedInt("roundRange", 4);
+                workRange.value = storedInt("workRange", 25);
+                minutes.value = workRange.value;
+                sBreakRange.value = storedInt("sBreakRange", 5);
+                lBreakRange.value = storedInt("lBreakRange", 15);
+                soundVolume.value = storedInt("soundVolume", 100);
+                musicVolume.value = storedInt("musicVolume", 75);
+                const storedMusicPref = localStorage.getItem("musicPref");
+                musicPref.value = Object.hasOwn(music, storedMusicPref)
+                    ? storedMusicPref
+                    : "nature";
                 isMusic.value = localStorage.getItem("isMusic") === "true";
                 autoPomodoro.value =
                     localStorage.getItem("autoPomodoro") === "true";
@@ -1069,7 +1056,7 @@ const app = createApp({
                 // Handle migration from old musicInBreaks to new musicTiming
                 const oldMusicInBreaks = localStorage.getItem("musicInBreaks");
                 const storedMusicTiming = localStorage.getItem("musicTiming");
-                if (storedMusicTiming) {
+                if (["work", "breaks", "both"].includes(storedMusicTiming)) {
                     musicTiming.value = storedMusicTiming;
                 } else if (oldMusicInBreaks !== null) {
                     // Migrate from old format
@@ -1112,7 +1099,8 @@ const app = createApp({
                 const storedTasks = localStorage.getItem("tasks");
                 if (storedTasks !== null) {
                     try {
-                        tasks.value = JSON.parse(storedTasks) || [];
+                        const parsed = JSON.parse(storedTasks);
+                        tasks.value = Array.isArray(parsed) ? parsed : [];
                     } catch (_e) {
                         tasks.value = [];
                     }
@@ -1201,12 +1189,8 @@ const app = createApp({
             // Load settings and tasks
             loadFromStorage();
 
-            // Initialize notification permission
-            if (enableNotifications.value && "Notification" in window) {
+            if ("Notification" in window) {
                 notificationPermission.value = Notification.permission;
-                if (Notification.permission === "default") {
-                    requestNotificationPermission();
-                }
             }
 
             applyTheme();
@@ -1286,7 +1270,6 @@ const app = createApp({
             changeCountdown,
             changeRound,
             changeInfinite,
-            toggleDarkMode,
             resetDefault,
 
             // Audio

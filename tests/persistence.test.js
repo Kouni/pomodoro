@@ -133,3 +133,24 @@ test("the 'too many tasks' placeholder is never persisted as a draft", () => {
     flushWatchers();
     assert.equal(localStorage.getItem("newTask"), "");
 });
+
+test("corrupt numbers and unknown choices fall back to defaults", () => {
+    const { api } = createApp({
+        storage: {
+            ...DEFAULTS,
+            workRange: "abc",
+            roundRange: "",
+            soundVolume: "NaN",
+            musicPref: "polka",
+            musicTiming: "sometimes",
+            tasks: "{}"
+        }
+    });
+    assert.equal(api.workRange.value, 25);
+    assert.equal(api.minutes.value, 25);
+    assert.equal(api.roundRange.value, 4);
+    assert.equal(api.soundVolume.value, 100);
+    assert.equal(api.musicPref.value, "nature");
+    assert.equal(api.musicTiming.value, "work");
+    assert.deepEqual(api.tasks.value, []);
+});

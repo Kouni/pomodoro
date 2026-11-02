@@ -273,3 +273,23 @@ test("theme is applied to the root element, main container and theme-color", () 
     );
     assert.equal(meta.getAttribute("content"), "#f43147");
 });
+
+test("notification permission is requested on the first play, not at load", (t) => {
+    t.mock.timers.enable({ apis: ["setInterval", "Date"] });
+    const { notification, pressPlay } = createApp();
+    assert.equal(notification.requests, 0);
+    pressPlay();
+    assert.equal(notification.requests, 1);
+});
+
+test("no permission request when notifications are disabled or already decided", (t) => {
+    t.mock.timers.enable({ apis: ["setInterval", "Date"] });
+    const off = createApp({
+        storage: { roundRange: "4", enableNotifications: "false" }
+    });
+    off.pressPlay();
+    assert.equal(off.notification.requests, 0);
+    const granted = createApp({ notification: { permission: "granted" } });
+    granted.pressPlay();
+    assert.equal(granted.notification.requests, 0);
+});

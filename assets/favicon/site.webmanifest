@@ -1,6 +1,6 @@
 {
-    "name": "",
-    "short_name": "",
+    "name": "Pomodoro Timer",
+    "short_name": "Pomodoro",
     "icons": [
         {
             "src": "/assets/favicon/android-chrome-192x192.png",
