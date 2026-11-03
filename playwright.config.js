@@ -17,7 +17,16 @@ export default defineConfig({
             ? { executablePath: process.env.PW_CHROMIUM_PATH }
             : {}
     },
-    projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
+    projects: [
+        { name: "chromium", use: { ...devices["Desktop Chrome"] } },
+        // Only CI installs these browsers; locally the suite runs on Chromium.
+        ...(process.env.CI
+            ? [
+                  { name: "firefox", use: { ...devices["Desktop Firefox"] } },
+                  { name: "webkit", use: { ...devices["Desktop Safari"] } }
+              ]
+            : [])
+    ],
     webServer: {
         command: "pnpm exec http-server -p 8080 -s -c-1",
         url: `${BASE_URL}index.html`,

@@ -28,7 +28,7 @@ jobs:
       - run: pnpm exec eslint index.js tests eslint.config.js playwright.config.js
       - run: pnpm exec prettier --check "*.{js,html,css,scss,json}" "tests/**/*.js"
       - run: pnpm test
-      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm exec playwright install --with-deps chromium firefox webkit
       - run: pnpm run test:e2e
       - uses: actions/upload-artifact@v4
         if: failure()
