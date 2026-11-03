@@ -454,3 +454,46 @@ $ pnpm outdated
 ### 13.2 U5 修正：原為誤報
 
 CI 上 `axe finds no violations in light mode` 失敗、本機通過。追查後：淺色模式下 Reset 按鈕的顏色來自 `#settings-container .container #page-container button.default { color: #141414; transition: color 0.2s }`（specificity 高於 `.underline`），對白底對比約 16:1。axe 回報 contrast 不足是因為在切換主題後 200 ms 的顏色 transition 期間取樣（CI runner 較快，每次都撞到；本機剛好錯過）。處置：`19dd386` 中對 `.underline` 的顏色調整還原（它對這顆按鈕從未生效），e2e 在量測前先等按鈕顏色到達 `rgb(20, 20, 20)`。U5 不是真實的對比問題。
+
+---
+
+## 14. 回報：「第二輪自己停著」複查 [verified]
+
+### 14.1 重現嘗試（真實時鐘、headless Chromium 153）
+
+| 情境（work／short／long 皆 1 分鐘）              | 結果                                                          |
+| ------------------------------------------------ | ------------------------------------------------------------- |
+| normal，rounds=2，跑完整 4 個 round（250 s）     | work → short → work → long → finished，每個轉場準時、自動開始 |
+| normal + 通知權限 granted（stub `Notification`） | 第二輪自動開始，通知發出 1 則                                 |
+| infinite + 音樂（nature，timing=both）           | 第二輪自動開始，音樂持續                                      |
+| normal + 音樂 timing=breaks                      | 休息時音樂開始、工作時停止，轉場正常                          |
+| infinite（用 checkbox 點選）rounds=4             | 第二輪休息、第三輪工作，正常                                  |
+| **infinite（用 checkbox 點選）rounds=1**         | **round 2 沒有休息，直接重來工作（B1）**                      |
+
+沒有任何組合出現「第二輪停著」。
+
+### 14.2 找到的 bug：B1（`3abaa8a`）
+
+`<input type="checkbox" v-model="infinite" @input="changeInfinite">`：checkbox 的 v-model 在 `change` 事件更新，但 `@input` 先觸發，`changeInfinite()` 讀到舊的 `infinite`，走到「關閉 infinite」分支把 `totalRound` 設成 `roundRange*2` 而非 999。結果：infinite 模式在 `roundRange*2` 的 round 直接重來（跳過長休息），rounds=1 時完全沒有休息。修法：改用 `@change`（v-model 的監聽先註冊、先執行）。e2e 新增假時鐘測試（點 checkbox 後 work／short 交替三輪）與真實時鐘測試。
+
+### 14.3 你看到的「停著」最可能的成因
+
+程式上只有兩類路徑會讓第二輪不動：
+
+1. **設定**：第三個設定分頁的「Auto-start breaks」為關（第二輪＝休息不自動開始）、或「Auto-start pomodoros」為關／「Don't start auto-pomodoro if To Do List is empty」為開且清單空（第二個工作回合不自動開始）。這些值存在 `localStorage`，和 infinite 無關，符合「不管是不是 infinite」。確認方式：第三分頁按「Reset to Default」再試一次。
+2. **轉場副作用丟例外**：舊流程在 `clearInterval` 之後、`countDownTimer()` 之前依序執行音效、通知、音樂、進度弧動畫；任一個在特定瀏覽器丟例外（例如 Android Chrome 的 `new Notification()` 是 Illegal constructor、`Audio.volume` 超出範圍的 IndexSizeError、tween 例外），interval 就不會重建，畫面停在下一輪的 `01:00`。headless 重現不了，但這個失敗模式現在已被結構性排除：所有副作用經 `safely()`（例外交給 `reportError`），`countDownTimer()` 先於動畫執行；unit 測試以會丟例外的 `Audio.play()` 驗證轉場仍完成。
+
+若 Reset to Default 後仍停住，請提供瀏覽器名稱／版本與 DevTools console 的錯誤訊息，就能直接定位。
+
+### 14.4 為何原本的測試沒抓到
+
+- 所有 e2e 都用 Playwright 假時鐘 `fastForward`，真實 `setInterval`、ProgressBar 的 tween、音訊 cue 從未在轉場時真的執行；unit 測試的 ProgressBar／Audio 都是 fake。現已加 `tests/e2e/realclock.spec.js`：兩個測試以真實時間走過 1 分鐘回合的轉場（normal 與 infinite），斷言轉場在 59–63 秒之間、下一輪在 12 秒內倒數到 `00:5x`。
+- B1 需要「用滑鼠點 checkbox」才會發生（事件順序），unit 測試直接設 `infinite.value` 看不到，舊 e2e 只檢查圓點隱藏。
+- 只在 Chromium 測。CI 現在同時跑 Chromium、Firefox、WebKit。
+
+### 14.5 本輪 commit
+
+| Commit                | 內容                                                                                                                                                                                                         |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| B1 + safely           | `@input` → `@change`；`safely()` 包住 `soundEffect`／`handleMusicForBreak`／工作回合音樂／`animateBar`；`countDownTimer()` 先於 `animateBar`；unit：丟例外的 cue 不中斷轉場；e2e：infinite checkbox 交替三輪 |
+| real clock + browsers | `tests/e2e/realclock.spec.js`（2 tests，約 130 s）；`playwright.config.js` 在 CI 加 firefox／webkit；CI 安裝三個瀏覽器                                                                                       |
