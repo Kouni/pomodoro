@@ -58,7 +58,7 @@ test("walks work, short break, work, long break and finishes", async ({
     expect(await app.timer()).toBe("01:00");
     await expect(page).toHaveTitle("😴 01:00 - Pomodoro Timer");
     expect(await app.dots()).toEqual(["active", "-"]);
-    expect((await app.audio("audio_break.mp3")).paused).toBe(false);
+    expect(await app.played()).toContain("audio_break.mp3");
 
     await app.tick(60_000);
     await expect(page.locator(".title h2").first()).toHaveText("Focus on work");
@@ -78,7 +78,7 @@ test("walks work, short break, work, long break and finishes", async ({
     await expect(
         page.getByRole("button", { name: "Start timer" })
     ).toBeVisible();
-    expect((await app.audio("audio_finish.mp3")).paused).toBe(false);
+    expect(await app.played()).toContain("audio_finish.mp3");
 
     await app.playButton.click();
     await expect(page.locator(".title h2").first()).toHaveText("Focus on work");

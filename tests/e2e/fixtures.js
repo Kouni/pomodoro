@@ -41,9 +41,15 @@ export const test = base.extend({
         );
         await page.addInitScript(() => {
             window.__audios = [];
+            window.__played = [];
             const Original = window.Audio;
             window.Audio = function (...args) {
                 const audio = new Original(...args);
+                const play = audio.play.bind(audio);
+                audio.play = () => {
+                    window.__played.push(audio.src.split("/").pop());
+                    return play();
+                };
                 window.__audios.push(audio);
                 return audio;
             };
@@ -143,7 +149,10 @@ export const test = base.extend({
                     }))
                 ),
             audio: async (file) =>
-                (await app.audios()).find((a) => a.file === file)
+                (await app.audios()).find((a) => a.file === file),
+            // Files handed to play(), in order; short cues may already have
+            // ended by the time a test looks, so "was played" is the stable check.
+            played: () => page.evaluate(() => window.__played)
         };
         await use(app);
     }
