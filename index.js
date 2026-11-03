@@ -117,12 +117,12 @@ const app = createApp({
             workStart: new Audio("assets/audio_work.mp3"),
             finish: new Audio("assets/audio_finish.mp3")
         };
-        // Music tracks are 25-28 MB each; fetch them on first play only.
-        // preload has to be set before src: WebKit starts loading on src.
+        // Music tracks are 25-28 MB each. WebKit fetches as soon as src is
+        // set regardless of preload, so the URL is only assigned on first play.
         const lazyAudio = (src) => {
             const track = new Audio();
             track.preload = "none";
-            track.src = src;
+            track.dataset.src = src;
             return track;
         };
         const music = {
@@ -331,8 +331,12 @@ const app = createApp({
             }
 
             musicPlaying.value = true;
-            music[musicPref.value].muted = false;
-            playSafely(music[musicPref.value]);
+            const track = music[musicPref.value];
+            if (!track.src) {
+                track.src = track.dataset.src;
+            }
+            track.muted = false;
+            playSafely(track);
 
             if (fx === "nature") {
                 music[musicPref.value].volume = 0;

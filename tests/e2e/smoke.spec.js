@@ -42,17 +42,9 @@ test("mounts with defaults and does not fetch music on load", async ({
         "https://unpkg.com/vue@3.5.44/dist/vue.global.prod.js"
     ]);
     const audios = await app.audios();
-    expect(
-        audios
-            .filter((a) => a.preload === "none")
-            .map((a) => a.file)
-            .sort()
-    ).toEqual([
-        "audio_cafe.mp3",
-        "audio_music.mp3",
-        "audio_nature.mp3",
-        "audio_rain.mp3"
-    ]);
+    const music = audios.filter((a) => a.preload === "none");
+    expect(music).toHaveLength(4);
+    expect(music.every((a) => a.file === "")).toBe(true); // no src until first play
 });
 
 test("loads the pinned Vue build through Subresource Integrity", async ({

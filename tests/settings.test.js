@@ -120,16 +120,24 @@ test("app mounts without the Notification API and treats it as denied", async ()
     assert.equal(api.enableNotifications.value, false);
 });
 
-test("audio: all 7 tracks are created eagerly at startup", () => {
-    const { audios } = createApp();
+test("audio: cues load eagerly, music tracks get their src on first play", () => {
+    const { api, audios } = createApp();
     assert.equal(audios.instances.length, 7);
-    const music = audios.instances.filter((a) =>
-        /audio_(nature|rain|cafe|music)/.test(a.src)
-    );
-    assert.equal(music.length, 4);
-    assert.ok(music.every((a) => a.preload === "none"));
+    const music = audios.instances.filter((a) => a.preload === "none");
+    assert.deepEqual(music.map((a) => a.dataset.src).sort(), [
+        "assets/audio_cafe.mp3",
+        "assets/audio_music.mp3",
+        "assets/audio_nature.mp3",
+        "assets/audio_rain.mp3"
+    ]);
+    assert.ok(music.every((a) => a.src === undefined));
     const effects = audios.instances.filter((a) => !music.includes(a));
-    assert.ok(effects.every((a) => a.preload === "auto"));
+    assert.ok(effects.every((a) => a.preload === "auto" && a.src));
+
+    api.isMusic.value = true;
+    api.musicOn("rain");
+    assert.deepEqual(audios.played, ["assets/audio_rain.mp3"]);
+    assert.equal(music.filter((a) => a.src).length, 1);
 });
 
 test("music toggle respects timing: work-only music stops during a break", (t) => {

@@ -48,6 +48,7 @@ const fakeStorage = () => {
 class FakeAudio {
     constructor(src) {
         this.src = src;
+        this.dataset = {};
         this.volume = 1;
         this.currentTime = 0;
         this.muted = false;
