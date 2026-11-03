@@ -497,3 +497,11 @@ CI 上 `axe finds no violations in light mode` 失敗、本機通過。追查後
 | --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | B1 + safely           | `@input` → `@change`；`safely()` 包住 `soundEffect`／`handleMusicForBreak`／工作回合音樂／`animateBar`；`countDownTimer()` 先於 `animateBar`；unit：丟例外的 cue 不中斷轉場；e2e：infinite checkbox 交替三輪 |
 | real clock + browsers | `tests/e2e/realclock.spec.js`（2 tests，約 130 s）；`playwright.config.js` 在 CI 加 firefox／webkit；CI 安裝三個瀏覽器                                                                                       |
+
+### 14.6 跨瀏覽器 CI 第一次跑出的問題：WebKit 不理會 `preload="none"`
+
+Chromium／Firefox 全綠，WebKit 的 smoke 測試失敗：Safari 在 `Audio` 元素一拿到 `src` 就開始請求，不論 `preload` 是在之前或之後設定（`d5832f1` 先設 `preload` 再設 `src` 仍失敗）。最終做法（`8795807`）：建立元素時不給 `src`，URL 放在 `dataset.src`，`musicOn()` 第一次播放前才指定；沒有 `src` 的元素在任何引擎都不會發請求。unit 測試改以 `dataset.src` 查找（`d735ca7`）。這表示 H5 在此之前對 Safari 使用者其實沒有生效。
+
+### 14.7 分支清理
+
+所有 commit 以 fast-forward 併入 `main` 後，`chore/health-check` 已從遠端與本機刪除；`claude/trusting-ramanujan-rbf2fe` 是本次 session 的工作分支（內容等於舊的 `main`），未動。
