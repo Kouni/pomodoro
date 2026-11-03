@@ -53,6 +53,18 @@ const playSafely = (audio) => {
     }
 };
 
+// A failing cue, notification or music call must never take the timer
+// down with it: the interval is rebuilt only after these side effects run.
+const safely = (fn) => {
+    try {
+        fn();
+    } catch (error) {
+        if (typeof reportError === "function") {
+            reportError(error);
+        }
+    }
+};
+
 // Global state
 let timerBar;
 const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -395,7 +407,7 @@ const app = createApp({
                     // <= 0, not === 0: a throttled background tab can skip
                     // the exact tick on which the deadline passes.
                     if (newDate.value - nowDate.value <= 0) {
-                        soundEffect(getSoundEffectType());
+                        safely(() => soundEffect(getSoundEffectType()));
                         clearInterval(timerInterval);
                         minutes.value = 0;
                         seconds.value = 0;
@@ -454,7 +466,7 @@ const app = createApp({
                     minutes.value = lBreakRange.value;
                     totalTime.value = lBreakRange.value * 60;
                     roundName.value = ROUND_NAMES[2];
-                    handleMusicForBreak();
+                    safely(handleMusicForBreak);
                 }
             } else if (currentRound.value % 2 === 0) {
                 // Short break
@@ -462,7 +474,7 @@ const app = createApp({
                 minutes.value = sBreakRange.value;
                 totalTime.value = sBreakRange.value * 60;
                 roundName.value = ROUND_NAMES[1];
-                handleMusicForBreak();
+                safely(handleMusicForBreak);
             } else {
                 // Work
                 autoStart = !autoTodoEmpty.value
@@ -472,21 +484,19 @@ const app = createApp({
                 minutes.value = workRange.value;
                 totalTime.value = workRange.value * 60;
                 roundName.value = ROUND_NAMES[0];
-                // Handle music for work mode
-                if (musicTiming.value === "breaks") {
-                    // Only during breaks - stop music during work
-                    if (musicPlaying.value) {
-                        musicOn("");
+                safely(() => {
+                    if (musicTiming.value === "breaks") {
+                        if (musicPlaying.value) {
+                            musicOn("");
+                        }
+                    } else if (
+                        isMusic.value &&
+                        !musicPlaying.value &&
+                        shouldPlayMusic()
+                    ) {
+                        musicOn(musicPref.value);
                     }
-                } else if (
-                    (musicTiming.value === "work" ||
-                        musicTiming.value === "both") &&
-                    isMusic.value &&
-                    !musicPlaying.value
-                ) {
-                    // During work or both - start music during work
-                    musicOn(musicPref.value);
-                }
+                });
             }
 
             nowDate.value = Math.trunc(new Date().getTime() / 1000);
@@ -505,8 +515,8 @@ const app = createApp({
             );
 
             if (currentRound.value === 1 || autoStart) {
-                animateBar(totalTime.value * 1000 + 10);
                 countDownTimer();
+                safely(() => animateBar(totalTime.value * 1000 + 10));
             } else {
                 playState.value = true;
             }
@@ -523,15 +533,18 @@ const app = createApp({
                     newDate.value =
                         nowDate.value + minutes.value * 60 + seconds.value;
                     countDownTimer();
-                    animateBar((newDate.value - nowDate.value) * 1000 + 10);
-
-                    if (
-                        isMusic.value &&
-                        !musicPlaying.value &&
-                        shouldPlayMusic()
-                    ) {
-                        musicOn(musicPref.value);
-                    }
+                    safely(() =>
+                        animateBar((newDate.value - nowDate.value) * 1000 + 10)
+                    );
+                    safely(() => {
+                        if (
+                            isMusic.value &&
+                            !musicPlaying.value &&
+                            shouldPlayMusic()
+                        ) {
+                            musicOn(musicPref.value);
+                        }
+                    });
                 } else {
                     currentRound.value = 1;
                     finished.value = false;
@@ -569,7 +582,7 @@ const app = createApp({
 
         const fastForwardTimer = () => {
             if (isCountdown.value) {
-                soundEffect(getSoundEffectType(), false);
+                safely(() => soundEffect(getSoundEffectType(), false));
                 clearInterval(timerInterval);
                 minutes.value = 0;
                 seconds.value = 0;

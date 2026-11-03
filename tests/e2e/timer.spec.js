@@ -150,3 +150,30 @@ test("with auto-start breaks off the break waits for play", async ({
     await app.tick(1000);
     expect(await app.timer()).toBe("00:59");
 });
+
+test("infinite mode toggled from the checkbox keeps alternating work and breaks", async ({
+    page,
+    app
+}) => {
+    await shortSession(app, { rounds: 1 });
+    await app.openSettings();
+    await app.settingsTab("More settings");
+    await page.getByLabel("Infinite").check();
+    await app.closeSettings();
+    await expect(page.locator("#rounds-container")).toBeHidden();
+
+    await app.playButton.click();
+    for (let i = 0; i < 3; i++) {
+        await app.tick(60_000);
+        await expect(page.locator(".title h2").first()).toHaveText(
+            "Take a short break"
+        );
+        await app.tick(60_000);
+        await expect(page.locator(".title h2").first()).toHaveText(
+            "Focus on work"
+        );
+    }
+    await expect(
+        page.getByRole("button", { name: "Pause timer" })
+    ).toBeVisible();
+});

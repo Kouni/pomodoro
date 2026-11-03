@@ -308,3 +308,16 @@ test("round indicator classes are derived from the timer state", (t) => {
     api.resetTimer();
     assert.deepEqual(dots(), ["", ""]);
 });
+
+test("a throwing audio cue does not stop the round transition", (t) => {
+    const { api, audios, pressPlay } = bootShort(t, { isMusic: true });
+    pressPlay();
+    audios.throwOnPlay = true;
+    tickSeconds(t, 60);
+    assert.equal(api.roundName.value, "Take a short break");
+    tickSeconds(t, 1);
+    assert.equal(api.seconds.value, 59); // the new interval is running
+    tickSeconds(t, 59);
+    assert.equal(api.roundName.value, "Focus on work");
+    assert.equal(api.currentRound.value, 3);
+});

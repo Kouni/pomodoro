@@ -56,6 +56,9 @@ class FakeAudio {
         FakeAudio.instances.push(this);
     }
     play() {
+        if (FakeAudio.throwOnPlay) {
+            throw new Error("play() exploded");
+        }
         this.paused = false;
         FakeAudio.played.push(this.src);
         return Promise.resolve();
@@ -142,6 +145,7 @@ export const createApp = ({
 
     FakeAudio.instances = [];
     FakeAudio.played = [];
+    FakeAudio.throwOnPlay = false;
     const bar = new FakePath();
 
     const mounted = [];
