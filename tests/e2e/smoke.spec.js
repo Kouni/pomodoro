@@ -31,7 +31,8 @@ test("mounts with defaults and does not fetch music on load", async ({
         ""
     );
     await page.waitForLoadState("networkidle");
-    expect(media.sort()).toEqual([
+    // WebKit issues several range requests per file; count files, not requests.
+    expect([...new Set(media)].sort()).toEqual([
         "audio_break.mp3",
         "audio_finish.mp3",
         "audio_work.mp3"

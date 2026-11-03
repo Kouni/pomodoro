@@ -117,16 +117,20 @@ const app = createApp({
             workStart: new Audio("assets/audio_work.mp3"),
             finish: new Audio("assets/audio_finish.mp3")
         };
-        const music = {
-            nature: new Audio("assets/audio_nature.mp3"),
-            rain: new Audio("assets/audio_rain.mp3"),
-            cafe: new Audio("assets/audio_cafe.mp3"),
-            music: new Audio("assets/audio_music.mp3")
-        };
         // Music tracks are 25-28 MB each; fetch them on first play only.
-        Object.values(music).forEach((track) => {
+        // preload has to be set before src: WebKit starts loading on src.
+        const lazyAudio = (src) => {
+            const track = new Audio();
             track.preload = "none";
-        });
+            track.src = src;
+            return track;
+        };
+        const music = {
+            nature: lazyAudio("assets/audio_nature.mp3"),
+            rain: lazyAudio("assets/audio_rain.mp3"),
+            cafe: lazyAudio("assets/audio_cafe.mp3"),
+            music: lazyAudio("assets/audio_music.mp3")
+        };
 
         // Notification state
         const notificationPermission = ref(

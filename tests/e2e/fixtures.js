@@ -42,8 +42,8 @@ export const test = base.extend({
         await page.addInitScript(() => {
             window.__audios = [];
             const Original = window.Audio;
-            window.Audio = function (src) {
-                const audio = new Original(src);
+            window.Audio = function (...args) {
+                const audio = new Original(...args);
                 window.__audios.push(audio);
                 return audio;
             };
