@@ -149,7 +149,7 @@ test("music toggle respects timing: work-only music stops during a break", (t) =
     api.musicOn("rain");
     assert.equal(api.musicPref.value, "rain");
     const rain = audios.instances.find(
-        (a) => a.src === "assets/audio_rain.mp3"
+        (a) => a.dataset.src === "assets/audio_rain.mp3"
     );
     assert.equal(rain.paused, false);
 
@@ -165,7 +165,7 @@ test("music set to breaks-only does not start during work", (t) => {
     pressPlay();
     api.musicOn("cafe");
     const cafe = audios.instances.find(
-        (a) => a.src === "assets/audio_cafe.mp3"
+        (a) => a.dataset.src === "assets/audio_cafe.mp3"
     );
     assert.equal(cafe.paused, true);
     api.fastForwardTimer();
