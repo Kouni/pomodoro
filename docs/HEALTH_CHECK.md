@@ -604,7 +604,7 @@ gzip 後少 39,411 bytes（−43%），HTTP 請求 5 → 3，且省掉對 unpkg 
 - `deploy.yml`：push 到 `main` 時 build `dist/` 並以 `actions/deploy-pages` 發布；`configure-pages` 帶 `enablement: true`。
 - 零停機切換順序：(1) 你在 repo Settings → Pages 把 Source 從「Deploy from a branch」改為「GitHub Actions」——舊版頁面此時仍持續提供；(2) 我把 `refactor/vite-pwa` fast-forward 到 `main`，`deploy.yml` 建置並發布新版；(3) 驗證 tomato.kouni.io。若 (2) 失敗，線上仍是舊版，修好再推一次即可。**不可**反過來先 merge 再切 Source：legacy builder 會把原始碼目錄當網站，`/src/main.js` 無法執行，站會壞到切換完成為止。
 
-CI 結果：待補（本節在 CI 跑完後更新）。
+CI 結果：run #16（`da357f8`）全綠，Chromium／Firefox／WebKit 各 33 個 e2e、unit 51、lint、prettier、build，3 分 41 秒。第一次跑（#15）在 webServer 等待逾時：runner 上 `localhost` 先解析成 `::1`，`vite preview` 只聽 IPv6，Playwright 探測 `127.0.0.1` 永遠不通；修法是 `preview` script 加 `--host 127.0.0.1`（本機 Firefox／WebKit 無法安裝：網路政策擋 `cdn.playwright.dev`，所以這兩個引擎只在 CI 驗證）。runner 另有警告：`checkout@v4`／`setup-node@v4`／`upload-artifact@v4`／`pnpm/action-setup@v4` 以 Node 20 為目標、被強制跑在 Node 24，目前可用，下次整理 CI 時升 major。
 
 ### 15.7 未驗證／風險
 
