@@ -531,3 +531,84 @@ Chromium／Firefox 全綠，WebKit 的 smoke 測試失敗：Safari 在 `Audio` �
 ### 14.10 真實時鐘測試加速
 
 真實時鐘測試原本每個 130 秒，三個瀏覽器佔 CI 六分鐘以上，再加測試就跑不完。`index.js` 加入 `MINUTE`：只有在 `localhost`／`127.0.0.1` 且 URL 帶 `?minute=N` 時，一「分鐘」才等於 N 秒；正式站固定 60（unit 測試鎖住這個 gating）。真實時鐘測試改開 `index.html?minute=3`，真實的 `setInterval`／tween／音效照常執行，三個測試（轉場與自動開始、infinite、暫停／恢復跨轉場）合計約 20 秒。
+
+## 15. 重構：Vite 8 + SFC + PWA（方案 B）[verified unless marked]
+
+### 15.1 結論
+
+選型評估後採方案 B：維持 Vue 3，改為 Vite 8 建置的單檔元件（SFC）專案，加上 PWA（可安裝、離線可用）、Web Worker 計時、Service Worker 通知與 Wake Lock；所有套件升到最新；功能與畫面以既有 e2e、真實時鐘測試與前後截圖逐像素比對驗收。未換框架（Svelte／Solid 等）：本應用的瓶頸不在 runtime，而在載入來源（CDN 第二個 origin）與背景分頁的計時器節流，這兩項方案 B 都解掉，且不需重寫業務邏輯。
+
+### 15.2 目錄結構
+
+```text
+index.html              Vite 入口（CSP、icons）
+vite.config.js          plugin-vue、vite-plugin-pwa（manifest、Workbox 預快取）
+src/main.js             mount App.vue、註冊 service worker
+src/App.vue             原 index.html 的 template 原樣搬入 + composables 組裝
+src/composables/        useTimer、useSettings、useTodo、useAudio、useNotifications、
+                        useTicker、useWakeLock、useTheme、useUi
+src/lib/                純函式：time.js、storage.js
+src/workers/ticker.js   每秒一個 tick 的 Web Worker
+src/styles/main.scss    原 index.scss；index.css 不再進 repo
+public/                 原樣複製：audio/、fonts/、icons/、sw-notify.js、CNAME
+tests/unit/             composables 測試（harness.js 以假物件組裝真實 composables）
+tests/e2e/              Playwright，對 vite preview 的正式建置執行
+```
+
+舊的 `index.js`（約 900 行、全域 `Vue.createApp` + in-DOM template）、`progressbar.min.js`（改用 npm 套件 `progressbar.js`）、`index.css`、`assets/favicon/site.webmanifest`（由 plugin 產生 `manifest.webmanifest`）刪除。`localStorage` 的 key 與格式不變，使用者設定與待辦清單在升級後保留（persistence unit 測試鎖住）。
+
+### 15.3 使用者有感的變更
+
+| 項目           | 之前                                                   | 現在                                                                                                     |
+| -------------- | ------------------------------------------------------ | -------------------------------------------------------------------------------------------------------- |
+| 載入來源       | 兩個 origin（GitHub Pages + unpkg CDN），`unsafe-eval` | 單一 origin，CSP `script-src 'self'`，無 SRI／CDN 失效風險                                               |
+| 第二次開啟     | 每次都走網路                                           | App shell 與三段提示音效預快取，離線可開、可計時；音樂第一次播放後快取（CacheFirst，支援 range request） |
+| 安裝           | 無                                                     | manifest + service worker，可「加入主畫面」以獨立視窗執行                                                |
+| 背景分頁計時   | 頁面 `setInterval` 被節流，靠切回時以牆鐘重算          | Web Worker 每秒 tick（不受分頁節流）+ `visibilitychange` 重算，兩者皆以牆鐘為準                          |
+| 背景通知       | `new Notification()`，Android Chrome 不支援            | 優先走 `registration.showNotification()`，點擊通知回到 app（`public/sw-notify.js`）                      |
+| 回合進行中螢幕 | 可能自動熄滅                                           | `navigator.wakeLock` 於倒數時持有、暫停／結束釋放、切回分頁重新取得（不支援的瀏覽器靜默略過）            |
+| 更新           | 靠瀏覽器快取策略                                       | service worker `autoUpdate`：下次開啟即取得新版                                                          |
+
+### 15.4 數據（measured，本機建置）
+
+首次載入需下載的 HTML／JS／CSS（不含音訊、字型、icons，兩版相同）：
+
+| 檔案               | 之前 raw / gzip      | 現在 raw / gzip                            |
+| ------------------ | -------------------- | ------------------------------------------ |
+| index.html         | 27,201 / 3,670       | 1,783 / 701                                |
+| 應用程式 JS        | 40,281 / 8,461       | 137,632 / 47,545（含 Vue、progressbar.js） |
+| Vue（CDN）         | 170,605 / 61,997     | —                                          |
+| progressbar.min.js | 42,369 / 12,685      | —                                          |
+| CSS                | 39,877 / 5,523       | 30,572 / 4,679                             |
+| 合計               | 320,333 / **92,336** | 170,159 / **52,925**                       |
+
+gzip 後少 39,411 bytes（−43%），HTTP 請求 5 → 3，且省掉對 unpkg 的 DNS／TLS 握手（行動網路上估計 100–300 ms，estimate）。之後才載入：`ticker` worker 174 B、workbox-window 5,653 B、`sw.js` 3,098 B、manifest 445 B。預快取 29 個項目（app shell、icons、字型、三段音效 break／work／finish）。
+
+### 15.5 驗收
+
+- unit：51 passed（`tests/unit`，Node 26.13.0）。
+- e2e：33 passed（Chromium，本機）；含三個真實時鐘測試與新的 PWA 測試（manifest、service worker scope）。Firefox／WebKit 在 CI 執行，結果見 15.6。
+- 截圖比對（Chromium headless，deviceScaleFactor 2，`prefers-reduced-motion`）：舊版以 `main` 的靜態檔案（Vue 以本機副本頂替 CDN）、新版以 `vite preview dist/`，PIL 逐像素比對（任一通道差 > 8 視為不同）：
+
+| 場景             | 尺寸      | 不同像素 |
+| ---------------- | --------- | -------- |
+| desktop-dark     | 2560×1600 | 0        |
+| desktop-light    | 2560×1600 | 0        |
+| desktop-settings | 2560×1600 | 0        |
+| desktop-todo     | 2560×1600 | 0        |
+| mobile-dark      | 780×1688  | 0        |
+
+### 15.6 CI／CD 與切換
+
+- `ci.yml`：lint、prettier、unit、`vite build`、Playwright（Chromium／Firefox／WebKit）；改為每個 branch 的 push 都跑（本 session 的 GitHub App 無 `actions: write`，無法 `workflow_dispatch`，先前的 `pages-build-deployment` 亦非本 session 可觸發）。
+- `deploy.yml`：push 到 `main` 時 build `dist/` 並以 `actions/deploy-pages` 發布；`configure-pages` 帶 `enablement: true`。
+- 零停機切換順序：(1) 你在 repo Settings → Pages 把 Source 從「Deploy from a branch」改為「GitHub Actions」——舊版頁面此時仍持續提供；(2) 我把 `refactor/vite-pwa` fast-forward 到 `main`，`deploy.yml` 建置並發布新版；(3) 驗證 tomato.kouni.io。若 (2) 失敗，線上仍是舊版，修好再推一次即可。**不可**反過來先 merge 再切 Source：legacy builder 會把原始碼目錄當網站，`/src/main.js` 無法執行，站會壞到切換完成為止。
+
+CI 結果：待補（本節在 CI 跑完後更新）。
+
+### 15.7 未驗證／風險
+
+- `actions/checkout@v4`、`setup-node@v4`、`configure-pages@v5`、`upload-pages-artifact@v3`、`deploy-pages@v4` 的版本沿用既有 CI 慣例，未查證是否有新 major [unverified]。
+- `github-pages` environment 若有「僅允許 main」的 deployment branch 規則，不影響此切換（只從 `main` 部署）。
+- PWA 安裝、Wake Lock、Service Worker 通知只在 headless Chromium 以 API 層驗證（e2e `serviceWorkers: "allow"`），未在實體手機測試；Safari 的 Wake Lock 需 16.4+，Firefox 不支援 Wake Lock（靜默略過）。
+- 音樂快取 CacheFirst 以 `maxEntries: 8` 限制，四首 25–28 MB 的 mp3 全聽過一遍會佔約 110 MB 的 Cache Storage；瀏覽器配額不足時 Workbox 會略過快取，不影響播放。
