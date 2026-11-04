@@ -2,17 +2,16 @@
     "name": "pomodoro-timer",
     "version": "1.0.0",
     "description": "A modern Pomodoro Timer web application with task management and productivity features",
-    "main": "index.js",
+    "main": "src/main.js",
     "type": "module",
     "scripts": {
-        "dev": "http-server -p 3000 -o",
-        "lint": "eslint index.js --fix",
-        "format": "prettier --write \"*.{js,html,css,scss,json}\"",
-        "build:css": "sass --no-source-map --style=expanded index.scss index.css && prettier --write index.css",
-        "serve": "http-server -p 8080",
-        "check": "pnpm run lint && pnpm run format",
+        "dev": "vite",
+        "build": "vite build",
+        "preview": "vite preview --port 8080 --strictPort",
+        "lint": "eslint src tests public/sw-notify.js eslint.config.js playwright.config.js vite.config.js",
+        "format": "prettier --write .",
         "validate": "./validate-simple.sh",
-        "test": "node --test \"tests/**/*.test.js\"",
+        "test": "node --test \"tests/unit/**/*.test.js\"",
         "test:e2e": "playwright test"
     },
     "keywords": [
@@ -28,14 +27,17 @@
     "devDependencies": {
         "@eslint/js": "^10.0.1",
         "@playwright/test": "1.64.1",
+        "@vitejs/plugin-vue": "6.0.10",
         "axe-core": "4.14.0",
         "eslint": "^10.14.0",
         "eslint-config-prettier": "^10.1.8",
+        "eslint-plugin-vue": "10.12.0",
         "globals": "^17.14.0",
-        "http-server": "^14.1.1",
         "prettier": "^3.9.10",
         "sass": "1.107.1",
-        "vue": "3.5.44"
+        "vite": "8.3.5",
+        "vite-plugin-pwa": "2.0.0",
+        "workbox-window": "7.4.1"
     },
     "browserslist": [
         "> 1%",
@@ -52,5 +54,9 @@
             "eslint>minimatch": "^11.0.1",
             "@eslint/config-array>minimatch": "^11.0.1"
         }
+    },
+    "dependencies": {
+        "progressbar.js": "1.1.1",
+        "vue": "3.5.44"
     }
 }

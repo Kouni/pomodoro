@@ -281,3 +281,7 @@ test-results/
 playwright-report/
 blob-report/
 playwright/.cache/
+
+### Vite / PWA ###
+dist/
+dev-dist/

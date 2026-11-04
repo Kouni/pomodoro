@@ -1,21 +1,18 @@
 import js from "@eslint/js";
 import globals from "globals";
+import pluginVue from "eslint-plugin-vue";
 import eslintConfigPrettier from "eslint-config-prettier";
 
 export default [
     js.configs.recommended,
+    ...pluginVue.configs["flat/essential"],
     {
         languageOptions: {
             ecmaVersion: 2024,
-            sourceType: "script",
-            globals: {
-                ...globals.browser,
-                Vue: "readonly",
-                ProgressBar: "readonly"
-            }
+            sourceType: "module",
+            globals: { ...globals.browser, ...globals.node }
         },
         rules: {
-            // Code quality
             "no-unused-vars": [
                 "error",
                 {
@@ -27,8 +24,6 @@ export default [
             "no-console": "warn",
             "no-debugger": "error",
             "no-alert": "warn",
-
-            // Best practices
             eqeqeq: ["error", "always"],
             curly: ["error", "all"],
             "no-var": "error",
@@ -37,16 +32,16 @@ export default [
         }
     },
     {
-        // Node-side files (tests, tooling) are ES modules.
-        files: ["tests/**/*.js", "eslint.config.js", "playwright.config.js"],
-        languageOptions: {
-            sourceType: "module",
-            // tests run in Node but evaluate callbacks inside the browser
-            globals: { ...globals.node, ...globals.browser }
-        }
+        files: ["src/workers/**/*.js", "public/sw-notify.js"],
+        languageOptions: { globals: globals.serviceworker }
     },
     {
-        ignores: ["node_modules/**", "assets/**", "*.min.js"]
+        ignores: [
+            "node_modules/**",
+            "dist/**",
+            "dev-dist/**",
+            "public/**/*.min.js"
+        ]
     },
     // Must be last: turns off every rule Prettier already enforces.
     eslintConfigPrettier

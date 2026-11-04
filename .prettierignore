@@ -10,4 +10,10 @@ assets/
 
 # Generated files
 *.map
+dist/
+dev-dist/
+pnpm-lock.yaml
+public/fonts/
+public/audio/
+public/icons/
 
