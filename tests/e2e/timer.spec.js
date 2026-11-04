@@ -216,3 +216,60 @@ test("the empty-to-do guard blocks only the start of a session", async ({
     ).toBeVisible();
     expect(await app.timer()).toBe("01:00");
 });
+
+// Regression for "the second pomodoro never counts" (four rounds, one-minute
+// settings, empty-list guard on): every round must count and the session
+// must finish on its own.
+test("a four-round session with the empty-list guard runs to the end", async ({
+    page,
+    app
+}) => {
+    await shortSession(app, { rounds: 4 });
+    await app.openSettings();
+    await app.settingsTab("More settings");
+    await page
+        .getByLabel("Don't start auto-pomodoro if to-do list is empty")
+        .check();
+    await app.closeSettings();
+    await app.openTodo();
+    await app.addTask("plan the day");
+    await app.closeTodo();
+    await app.playButton.click();
+    await app.openTodo();
+    await page.getByRole("button", { name: "Remove Plan the day" }).click();
+    await app.tick(600);
+    await app.closeTodo();
+    await expect(page.locator(".task")).toHaveCount(0);
+
+    const expected = [
+        "Focus on work",
+        "Take a short break",
+        "Focus on work",
+        "Take a short break",
+        "Focus on work",
+        "Take a short break",
+        "Focus on work",
+        "Take a long break"
+    ];
+    for (const [i, name] of expected.entries()) {
+        await expect(page.locator(".title h2").first()).toHaveText(name);
+        await expect(
+            page.getByRole("button", { name: "Pause timer" })
+        ).toBeVisible();
+        await expect(page.getByRole("status")).toHaveCount(0);
+        await app.tick(1000);
+        expect(await app.timer()).toMatch(/:5[89]$/);
+        await app.tick((i === 7 ? 119 : 59) * 1000);
+    }
+    await expect(page.locator(".title h1")).toBeVisible();
+    await expect(
+        page.getByRole("button", { name: "Start timer" })
+    ).toBeVisible();
+    await expect(page).toHaveTitle("Pomodoro Timer");
+
+    await app.playButton.click();
+    await expect(page.getByRole("status")).toHaveText(
+        "The to-do list is empty. Add a task to start a pomodoro."
+    );
+    await expect(page.locator(".title h1")).toBeVisible();
+});

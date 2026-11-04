@@ -356,3 +356,45 @@ test("an armed work round explains why it is waiting, a paused one does not", (t
     assert.equal(api.isPaused.value, true);
     assert.equal(api.waitingReason.value, "");
 });
+
+// Regression for the reported "second pomodoro never counts" with the
+// empty-list guard on: a four-round session must run every round to the end.
+test("a four-round session runs every round even when the to-do list empties", (t) => {
+    const { api, pressPlay } = bootShort(t, {
+        roundRange: 4,
+        autoTodoEmpty: true
+    });
+    api.newTask.value = "plan the day";
+    api.addTask();
+    pressPlay();
+    api.tasks.value.splice(0, 1);
+
+    const expected = [
+        "Focus on work",
+        "Take a short break",
+        "Focus on work",
+        "Take a short break",
+        "Focus on work",
+        "Take a short break",
+        "Focus on work",
+        "Take a long break"
+    ];
+    expected.forEach((name, i) => {
+        assert.equal(api.roundName.value, name, `round ${i + 1}`);
+        assert.equal(api.playState.value, false, `round ${i + 1} is running`);
+        assert.equal(api.waitingReason.value, "");
+        tickSeconds(t, 1);
+        assert.equal(api.seconds.value, 59, `round ${i + 1} counts`);
+        tickSeconds(t, i === 7 ? 119 : 59); // the long break is 2 minutes
+    });
+    assert.equal(api.isCountdown.value, false);
+    assert.equal(api.playState.value, true);
+    assert.equal(api.currentRound.value, 9);
+
+    pressPlay(); // a new session is gated again by the empty list
+    assert.equal(api.isCountdown.value, false);
+    assert.equal(
+        api.waitingReason.value,
+        "The to-do list is empty. Add a task to start a pomodoro."
+    );
+});

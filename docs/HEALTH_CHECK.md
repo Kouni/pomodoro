@@ -515,3 +515,15 @@ Chromium／Firefox 全綠，WebKit 的 smoke 測試失敗：Safari 在 `Audio` �
 - 守門員只在**開始 session** 時檢查：開關開且清單空時，▶ 不會開始，並在計時器內顯示「The to-do list is empty. Add a task to start a pomodoro.」；session 一旦開始，中途不再因清單空而停下，4 輪就是 4 輪。
 - 其他 armed 狀態（Auto-start pomodoros／breaks 關）在計時器內顯示原因，分頁標題改為 ⏸️ Paused，不再被誤認為當機。
 - unit／e2e 各加三個情境；真實時鐘測試維持。
+
+### 14.9 回歸測試（避免再發生）
+
+| 問題                                      | 測試                                                                                                                                                                                                                    |
+| ----------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 4 輪 session 在第二個番茄鐘停住（守門員） | unit `a four-round session runs every round even when the to-do list empties`；e2e `a four-round session with the empty-list guard runs to the end`（8 個 round 逐一斷言「正在倒數」、最後自動結束、新 session 才被擋） |
+| 守門員語意                                | unit `the empty-to-do guard only blocks starting a session`；e2e `the empty-to-do guard blocks only the start of a session`                                                                                             |
+| armed 狀態無提示                          | unit `an armed break…`／`an armed work round…`；e2e `with auto-start breaks off…` 斷言 `role=status` 文字與 ⏸️ 標題                                                                                                     |
+| infinite checkbox 讀到舊值（B1）          | e2e `infinite mode toggled from the checkbox…`（假時鐘）＋ `real clock: infinite mode…`（真實時鐘，三瀏覽器）                                                                                                           |
+| 轉場副作用讓 interval 消失                | unit `a throwing audio cue does not stop the round transition`                                                                                                                                                          |
+| 真實時間下的轉場                          | e2e `realclock.spec.js` ×2（Chromium／Firefox／WebKit）                                                                                                                                                                 |
+| Safari 載入時抓音樂檔                     | e2e smoke（三瀏覽器）斷言音樂元素無 `src`、無 mp3 請求                                                                                                                                                                  |
