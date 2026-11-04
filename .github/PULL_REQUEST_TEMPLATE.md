@@ -4,9 +4,6 @@
 
 ## Checklist
 
-- [ ] `pnpm lint` and `pnpm exec prettier --check .` pass
-- [ ] `pnpm test` passes
-- [ ] `pnpm run test:e2e` passes, or CI is green on Chromium, Firefox and WebKit
 - [ ] New or changed behaviour is covered by a test
 - [ ] `README.md` or `docs/` updated if commands or behaviour changed
-- [ ] Commit messages follow Conventional Commits
+- [ ] PR title follows Conventional Commits (it becomes the commit on `main`)

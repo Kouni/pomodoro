@@ -1,5 +1,4 @@
-blank_issues_enabled: false
 contact_links:
     - name: Security vulnerability
-      url: https://github.com/Kouni/pomodoro/security/advisories/new
+      url: https://github.com/Kouni/pomodoro/security/policy
       about: Report security problems privately instead of opening an issue.

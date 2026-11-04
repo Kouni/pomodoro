@@ -13,8 +13,10 @@ privately through GitHub:
 https://github.com/Kouni/pomodoro/security/advisories/new
 
 Include the steps to reproduce, the browser and version, and whether the app
-was installed as a PWA. You will get an acknowledgement within seven days
-and a fix or a decision within thirty.
+was installed as a PWA. This is a one-person project with no guaranteed
+response times: reports are acknowledged as soon as the maintainer sees
+them, and the fix timeline and the disclosure date are agreed with you in
+the advisory thread.
 
 ## Scope
 
@@ -27,5 +29,5 @@ here:
 - Service worker or cache behaviour that serves tampered content
 - Dependency advisories that reach runtime code in `dist/`
 
-Advisories that only touch build-time tooling are tracked through Dependabot
-and fixed as upstream releases allow.
+Advisories that only touch build-time tooling are handled through
+Dependabot alerts and version updates as upstream releases allow.

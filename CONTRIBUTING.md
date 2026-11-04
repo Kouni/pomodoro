@@ -7,7 +7,8 @@ requests focused, and make sure CI is green.
 ## Prerequisites
 
 - Node 26 — the exact version is in `.nvmrc` (`nvm use` or `fnm use`)
-- pnpm 10 — `corepack enable` picks up the version pinned in `package.json`
+- pnpm 10 — `npm install -g pnpm@10` (Node 25 and later no longer ship
+  Corepack); pnpm then uses the exact version pinned in `package.json`
 
 ```bash
 pnpm install
@@ -21,42 +22,43 @@ use `pnpm build && pnpm preview`.
 ## Before you push
 
 ```bash
-pnpm lint
-pnpm exec prettier --check .
-pnpm test
+pnpm run validate        # lint, prettier --check, unit tests, build
 pnpm run test:e2e        # first run: pnpm exec playwright install chromium
 ```
 
-`pnpm run validate` runs the lint, format and build checks in one go. CI
-repeats all of the above on Chromium, Firefox and WebKit, so a change that
-only passes locally on Chromium will still fail the pull request.
+CI runs the same checks plus the e2e suite on Chromium, Firefox and WebKit,
+so a change that only passes locally on Chromium will still fail the pull
+request.
 
 ## Where things go
 
-- `src/composables/` — one composable per concern; keep them free of DOM
-  access so they stay testable with the fakes in `tests/unit/harness.js`
+- `src/composables/` — one composable per concern. Browser APIs
+  (`document`, `Worker`, `Notification`, `Audio`, `navigator`) are
+  parameters that default to the real globals, so `tests/unit/harness.js`
+  can pass fakes
 - `src/lib/` — pure functions with no Vue or browser dependency
-- `tests/unit/` — one `*.test.js` per composable, run by `node --test`
+- `tests/unit/` — behaviour-level `*.test.js` files (timer, settings,
+  persistence) that drive the real composables through the fakes in
+  `harness.js`; run by `node --test`
 - `tests/e2e/` — Playwright specs; shared setup lives in `tests/e2e/fixtures.js`
-- `docs/` — guides that stay true over time; dated reports go in
+- `docs/` — guides that stay true over time; dated session logs go in
   `docs/reports/`
-- `scripts/` — helper scripts invoked from `package.json`
 
 New behaviour comes with a test. A bug fix comes with a test that failed
 before the fix.
 
-## Commit messages
+## Commit messages and PR titles
 
-Commits follow [Conventional Commits](https://www.conventionalcommits.org/):
+Commits follow [Conventional Commits](https://www.conventionalcommits.org/),
+and so does the pull request title, because that is what lands on `main`
+when a PR is squash-merged. Real examples from the history:
 
 ```text
-feat(timer): add a long-break length setting
-fix(todo): keep the eight-task cap after a reload
-docs: describe the real-clock e2e scale
-test(e2e): cover the install prompt on WebKit
-ci: cache the Playwright browsers
-build: bump vite to 8.3.5
-refactor: move the ticker into a Web Worker
+test(e2e): run the real-timer tests at 3 s per minute on local servers
+refactor: split index.js into composables, App.vue and a worker ticker
+perf: self-host Roboto and drop the Google Fonts requests
+build: override filelist's minimatch to 11.x for the Dependabot alert
+ci: run on every pushed branch
 ```
 
 Use the imperative mood, keep the subject under 72 characters, and explain
@@ -68,7 +70,7 @@ the why in the body when it is not obvious from the diff.
 2. Fill in the pull request template; link the issue it closes.
 3. Keep the diff to one concern. Reformatting or renaming goes in its own PR.
 4. Update `README.md` or `docs/` when behaviour or commands change.
-5. A maintainer reviews and squash-merges once CI is green.
+5. A maintainer reviews and merges once CI is green.
 
 ## Reporting bugs and requesting features
 

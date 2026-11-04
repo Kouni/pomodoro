@@ -14,42 +14,33 @@ Both run in CI (`.github/workflows/ci.yml`, Chromium + Firefox + WebKit) on
 Node 26 (`.nvmrc`). `pnpm run test:e2e` builds `dist/` and serves it with
 `vite preview` on port 8080 by itself.
 
+Unit tests live in `tests/unit/` as behaviour-level files (timer, settings,
+persistence) that drive the real composables through the fakes in
+`tests/unit/harness.js`. Playwright specs live in `tests/e2e/`, with the
+shared setup in `tests/e2e/fixtures.js`.
+
 ## Quick Validation
 
 ```bash
-pnpm run validate   # or scripts/validate.sh
+pnpm run validate   # pnpm lint && prettier --check . && pnpm test && pnpm build
 ```
 
-Checks that the entry files exist (`index.html`, `vite.config.js`,
-`src/main.js`, `src/App.vue`, `src/styles/main.scss`), that `pnpm lint`,
-`prettier --check .` and `pnpm build` pass, and that `src/` has no
-`console.*` statements.
+These are the checks CI runs before the e2e suite. Each step prints its own
+output, so a failure names the file and the rule.
 
 ## Manual Testing
 
 1. `pnpm dev` and open the printed URL (service worker is off in dev).
-2. `pnpm build && pnpm preview` and open http://localhost:8080 to test the
+2. `pnpm build && pnpm preview` and open http://127.0.0.1:8080 to test the
    production build with the service worker, the install prompt and offline
-   reload.
+   reload. The preview binds 127.0.0.1 only: `localhost` resolves to `::1`
+   on some machines, and the Playwright probe then never connected.
 3. Features: timer (play / pause / reset / fast forward), four-round session
    with short and long breaks, infinite mode, auto-start toggles, to-do list
    (add / tick / remove, eight-task cap), settings tabs, light mode, music
    with volume, notifications (allow the permission prompt first).
 4. Background tab: start a round, switch tabs for a minute, come back; the
    remaining time must match the wall clock and the cue must have played.
-
-## Development Commands
-
-```bash
-pnpm dev            # Vite dev server with hot reload
-pnpm build          # production build into dist/
-pnpm preview        # serve dist/ on http://localhost:8080
-pnpm lint           # ESLint (flat config, eslint-plugin-vue)
-pnpm run format     # Prettier --write .
-pnpm test           # unit tests
-pnpm run test:e2e   # Playwright
-pnpm run validate   # quick file / lint / build check
-```
 
 ## Troubleshooting
 

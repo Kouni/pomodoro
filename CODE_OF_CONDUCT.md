@@ -36,7 +36,7 @@ This Code of Conduct applies within all community spaces, and also applies when 
 
 ## Enforcement
 
-Instances of abusive, harassing, or otherwise unacceptable behavior may be reported to the community leaders responsible for enforcement at the maintainer, [@Kouni](https://github.com/Kouni), through a private message or the contact details on that profile. All complaints will be reviewed and investigated promptly and fairly.
+Instances of abusive, harassing, or otherwise unacceptable behavior may be reported privately to the maintainer, [@Kouni](https://github.com/Kouni). Until a dedicated contact address is published here, use the private report form at https://github.com/Kouni/pomodoro/security/advisories/new, which reaches only the repository's maintainers. All complaints will be reviewed and investigated promptly and fairly.
 
 All community leaders are obligated to respect the privacy and security of the reporter of any incident.
 

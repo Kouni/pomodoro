@@ -21,7 +21,7 @@ export default [
                     caughtErrorsIgnorePattern: "^_"
                 }
             ],
-            "no-console": "warn",
+            "no-console": "error",
             "no-debugger": "error",
             "no-alert": "warn",
             eqeqeq: ["error", "always"],

@@ -1,12 +1,4 @@
-# Dependencies
-node_modules/
-
-# Generated files
-dist/
-dev-dist/
 pnpm-lock.yaml
-
-# Binary assets and third-party files copied as-is
-public/fonts/
-public/audio/
-public/icons/
+# Vendored minified files, the same carve-out as eslint.config.js
+*.min.js
+*.min.css

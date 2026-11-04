@@ -12,9 +12,10 @@ stored in your browser.
 
 ## Features
 
-- Four-round session with short and long breaks, an infinite mode, and
-  auto-start toggles for work and break rounds
-- To-do list with up to eight tasks; a session needs at least one open task
+- Sessions of 1–10 rounds (four by default) with short and long breaks, an
+  infinite mode, and auto-start toggles for work and break rounds
+- To-do list with up to eight tasks; an optional setting refuses to start a
+  session while the list is empty
 - Ambient music (cafe, nature, rain, music) with a volume control; cues for
   round start, break and finish
 - Desktop notifications delivered through the service worker, so they fire
@@ -27,7 +28,9 @@ stored in your browser.
 
 ## Quick start
 
-Requires Node 26 (see `.nvmrc`) and pnpm 10 (`corepack enable`).
+Requires Node 26 (`.nvmrc`) and pnpm 10. Node 25 and later no longer ship
+Corepack, so install pnpm with `npm install -g pnpm@10`; pnpm then switches
+itself to the exact version pinned in `package.json`.
 
 ```bash
 pnpm install
@@ -43,12 +46,12 @@ pnpm lint           # ESLint (flat config, eslint-plugin-vue)
 pnpm run format     # Prettier --write .
 pnpm test           # unit tests (node:test)
 pnpm run test:e2e   # Playwright (first run: pnpm exec playwright install chromium)
-pnpm run validate   # quick file / lint / format / build check
+pnpm run validate   # lint, prettier --check, unit tests and build in one go
 ```
 
-See [docs/testing.md](docs/testing.md) for the test layout, manual checks
-and troubleshooting, and [CONTRIBUTING.md](CONTRIBUTING.md) for the
-workflow and commit conventions.
+See [docs/testing.md](docs/testing.md) for how the tests are organised, the
+manual checks and troubleshooting, and [CONTRIBUTING.md](CONTRIBUTING.md)
+for the workflow.
 
 ## Project layout
 
@@ -57,11 +60,10 @@ workflow and commit conventions.
   ISSUE_TEMPLATE/      bug report and feature request forms
   workflows/           ci.yml (lint, unit, build, Playwright) and deploy.yml (Pages)
 docs/
-  testing.md           how to run and extend the tests
-  reports/             dated engineering reports (health check, refactor notes)
-public/                copied as-is: audio/, fonts/, icons/, sw-notify.js, CNAME
-scripts/
-  validate.sh          quick sanity check for a fresh checkout (pnpm run validate)
+  testing.md           how the tests are organised, manual checks, troubleshooting
+  reports/             dated session logs; historical, paths may not match the tree
+public/                copied as-is: audio/ and fonts/ (each with its own README
+                       and licence terms), icons/, sw-notify.js, CNAME
 src/
   main.js              mounts App.vue, registers the service worker
   App.vue              template and wiring of the composables
@@ -71,7 +73,7 @@ src/
   styles/main.scss     styles
   workers/ticker.js    one tick per second from a Web Worker
 tests/
-  unit/                composable tests on fakes (tests/unit/harness.js)
+  unit/                behaviour tests driving the composables through fakes (harness.js)
   e2e/                 Playwright specs; real-clock tests use /?minute=N on localhost
 index.html             Vite entry page (CSP, icons)
 vite.config.js         Vite, Vue and PWA (Workbox) configuration
@@ -81,10 +83,13 @@ eslint.config.js       lint rules
 
 ## Deploy
 
-Every push runs `.github/workflows/ci.yml` (lint, unit, build, Playwright on
-Chromium, Firefox and WebKit). Pushes to `main` also run
+Every pushed branch runs `.github/workflows/ci.yml` (lint, unit, build,
+Playwright on Chromium, Firefox and WebKit); Dependabot branches get the
+pull-request run only. Pushes to `main` also run
 `.github/workflows/deploy.yml`, which builds `dist/` and publishes it to
-GitHub Pages. The Pages source must be set to "GitHub Actions".
+GitHub Pages. The workflow enables Pages on a new repository by itself; a
+repository that already publishes Pages from a branch has to switch
+Settings → Pages → Source to "GitHub Actions" once.
 
 ## Contributing
 
@@ -94,5 +99,14 @@ To report a vulnerability, follow [SECURITY.md](SECURITY.md).
 
 ## License
 
-[MIT](LICENSE). Roboto is bundled under the Apache License 2.0, see
-[public/fonts/README.md](public/fonts/README.md).
+The code is released under the [MIT License](LICENSE). The project started
+as a fork of [marcelmiro/pomodoro](https://github.com/marcelmiro/pomodoro);
+the Vue 3, Vite and PWA rewrite is this repository's.
+
+Bundled assets have their own terms:
+
+- Roboto (`public/fonts/`) is under the SIL Open Font License 1.1, see
+  [public/fonts/OFL.txt](public/fonts/OFL.txt).
+- The audio cues and ambient tracks (`public/audio/`) are third-party
+  recordings that are not covered by the MIT licence; what is known about
+  them is in [public/audio/README.md](public/audio/README.md).

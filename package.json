@@ -10,7 +10,7 @@
         "preview": "vite preview --host 127.0.0.1 --port 8080 --strictPort",
         "lint": "eslint src tests public/sw-notify.js eslint.config.js playwright.config.js vite.config.js",
         "format": "prettier --write .",
-        "validate": "scripts/validate.sh",
+        "validate": "pnpm lint && pnpm exec prettier --check . && pnpm test && pnpm build",
         "test": "node --test \"tests/unit/**/*.test.js\"",
         "test:e2e": "playwright test"
     },

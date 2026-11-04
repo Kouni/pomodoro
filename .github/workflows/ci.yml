@@ -2,6 +2,8 @@ name: CI
 
 on:
     push:
+        # Dependabot branches already get the pull_request run below.
+        branches-ignore: ["dependabot/**"]
     pull_request:
     workflow_dispatch:
 

@@ -1,26 +1,12 @@
 # Dependencies
 node_modules/
 
-# Build output
+# Build and test output
 dist/
-dev-dist/
-
-# Test output
-coverage/
 test-results/
 playwright-report/
-blob-report/
-playwright/.cache/
-
-# Logs and caches
 *.log
-.eslintcache
-.cache/
-
-# Environment
-.env
-.env.*
-!.env.example
+*.tgz
 
 # Editors and OS
 .idea/
