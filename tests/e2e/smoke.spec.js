@@ -1,4 +1,4 @@
-import { test, expect, VUE_BUILD } from "./fixtures.js";
+import { test, expect } from "./fixtures.js";
 
 test("mounts with defaults and does not fetch music on load", async ({
     page,
@@ -37,40 +37,11 @@ test("mounts with defaults and does not fetch music on load", async ({
         "audio_finish.mp3",
         "audio_work.mp3"
     ]);
-    // Vue from the pinned CDN URL is the only third-party request.
-    expect(external).toEqual([
-        "https://unpkg.com/vue@3.5.44/dist/vue.global.prod.js"
-    ]);
+    expect(external).toEqual([]); // everything is first-party now
     const audios = await app.audios();
     const music = audios.filter((a) => a.preload === "none");
     expect(music).toHaveLength(4);
     expect(music.every((a) => a.file === "")).toBe(true); // no src until first play
-});
-
-test("loads the pinned Vue build through Subresource Integrity", async ({
-    page,
-    app
-}) => {
-    await app.goto({ clock: false });
-    expect(await page.evaluate(() => window.Vue.version)).toBe("3.5.44");
-});
-
-test.describe("tampered CDN response", () => {
-    test.use({ vueBody: `${VUE_BUILD}\n/* tampered */`, allowErrors: true });
-
-    test("is rejected by the browser and the app does not mount", async ({
-        page,
-        errors
-    }) => {
-        await page.goto("index.html");
-        await page.waitForLoadState("networkidle");
-        expect(await page.evaluate(() => typeof window.Vue)).toBe("undefined");
-        expect(errors.some((e) => /integrity/i.test(e))).toBe(true);
-        await expect(page.locator("#main-container")).toHaveAttribute(
-            "v-cloak",
-            ""
-        );
-    });
 });
 
 test("ships a Content-Security-Policy and still mounts under it", async ({
@@ -82,9 +53,9 @@ test("ships a Content-Security-Policy and still mounts under it", async ({
         'meta[http-equiv="Content-Security-Policy"]',
         (e) => e.content
     );
-    expect(csp).toContain("script-src 'self' https://unpkg.com");
+    expect(csp).toContain("script-src 'self';"); // no CDN, no unsafe-eval
     expect(csp).toContain("object-src 'none'");
-    expect(await page.evaluate(() => typeof window.Vue)).toBe("object");
+    await expect(page.locator("#main-container")).toBeVisible();
 });
 
 test("exposes landmarks and named controls", async ({ page, app }) => {
@@ -105,4 +76,30 @@ test("exposes landmarks and named controls", async ({ page, app }) => {
     await expect(
         page.getByRole("button", { name: "Fast Forward Icon" })
     ).toBeVisible();
+});
+
+test.describe("progressive web app", () => {
+    test.use({ serviceWorkers: "allow" });
+
+    test("registers a service worker and exposes a manifest", async ({
+        page,
+        app
+    }) => {
+        await app.goto({ clock: false });
+        await expect(page.locator('link[rel="manifest"]')).toHaveAttribute(
+            "href",
+            /manifest\.webmanifest$/
+        );
+        const scope = await page.evaluate(async () => {
+            const registration = await navigator.serviceWorker.ready;
+            return registration.scope;
+        });
+        expect(scope).toBe("http://127.0.0.1:8080/");
+        const manifest = await page.evaluate(async () => {
+            const href = document.querySelector('link[rel="manifest"]').href;
+            return (await fetch(href)).json();
+        });
+        expect(manifest.name).toBe("Pomodoro Timer");
+        expect(manifest.display).toBe("standalone");
+    });
 });

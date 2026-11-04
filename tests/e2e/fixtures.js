@@ -1,36 +1,19 @@
-// Shared fixtures: the pinned Vue build is served from node_modules so the
-// suite is deterministic and works offline (the browser still enforces the
-// SRI hash on those bytes); Google Fonts are stubbed; every Audio element
-// is recorded; console/page errors fail the test unless allowed.
+// Shared fixtures: every Audio element is recorded, axe is served from a
+// same-origin URL, and console/page errors fail the test unless allowed.
 import { test as base, expect } from "@playwright/test";
 import { createRequire } from "node:module";
 import { readFileSync } from "node:fs";
 
 const require = createRequire(import.meta.url);
-export const VUE_BUILD = readFileSync(
-    require.resolve("vue/dist/vue.global.prod.js"),
-    "utf8"
-);
 const AXE_SOURCE = readFileSync(require.resolve("axe-core/axe.min.js"), "utf8");
 export const CLOCK_START = new Date("2026-11-02T10:00:00Z");
 
 const text = (s) => s.replace(/\s+/g, "");
 
 export const test = base.extend({
-    vueBody: [VUE_BUILD, { option: true }],
     allowErrors: [false, { option: true }],
 
-    page: async ({ page, vueBody }, use) => {
-        await page.route("**/unpkg.com/**", (route) =>
-            route.fulfill({
-                status: 200,
-                body: vueBody,
-                headers: {
-                    "content-type": "application/javascript",
-                    "access-control-allow-origin": "*"
-                }
-            })
-        );
+    page: async ({ page }, use) => {
         // axe is injected from a same-origin URL so the page's CSP stays on.
         await page.route("**/__axe.js", (route) =>
             route.fulfill({

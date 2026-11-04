@@ -111,13 +111,13 @@ test("corrupt tasks JSON falls back to an empty list", () => {
     assert.deepEqual(api.tasks.value, []);
 });
 
-test("state changes are persisted through the watcher", () => {
+test("state changes are persisted through the watcher", async () => {
     const { api, localStorage, flushWatchers } = createApp();
     api.roundRange.value = 7;
     api.isMusic.value = true;
     api.newTask.value = "wip";
     api.tasks.value.push({ text: "X", completed: false, priority: true });
-    flushWatchers();
+    await flushWatchers();
     assert.equal(localStorage.getItem("roundRange"), "7");
     assert.equal(localStorage.getItem("isMusic"), "true");
     assert.equal(localStorage.getItem("newTask"), "wip");
@@ -127,10 +127,10 @@ test("state changes are persisted through the watcher", () => {
     );
 });
 
-test("the 'too many tasks' placeholder is never persisted as a draft", () => {
+test("the 'too many tasks' placeholder is never persisted as a draft", async () => {
     const { api, localStorage, flushWatchers } = createApp();
     api.newTask.value = "Can't add more tasks...";
-    flushWatchers();
+    await flushWatchers();
     assert.equal(localStorage.getItem("newTask"), "");
 });
 

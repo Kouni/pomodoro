@@ -85,7 +85,7 @@ test("work round ends at 0: cue plays and the short break starts in the same tic
     assert.deepEqual(audios.played, []);
 
     tickSeconds(t, 1);
-    assert.deepEqual(audios.played, ["assets/audio_break.mp3"]);
+    assert.deepEqual(audios.played, ["/audio/audio_break.mp3"]);
     assert.equal(api.currentRound.value, 2);
     assert.equal(api.roundName.value, "Take a short break");
     assert.equal(api.shortRoundName.value, "Short break");
@@ -104,7 +104,7 @@ test("throttled tab: a tick that lands past 0 still plays the cue and transition
     t.mock.timers.tick(45_000); // one wakeup, 15 s past the deadline
     assert.equal(api.currentRound.value, 2);
     assert.equal(api.roundName.value, "Take a short break");
-    assert.deepEqual(audios.played, ["assets/audio_break.mp3"]);
+    assert.deepEqual(audios.played, ["/audio/audio_break.mp3"]);
 });
 
 test("fast forward walks work → short → work → long → finished", (t) => {
@@ -135,10 +135,10 @@ test("fast forward walks work → short → work → long → finished", (t) => 
     assert.equal(document.title, "Pomodoro Timer");
     assert.deepEqual(bar.calls.at(-1), ["set", 0]);
     assert.deepEqual(audios.played, [
-        "assets/audio_break.mp3",
-        "assets/audio_work.mp3",
-        "assets/audio_break.mp3",
-        "assets/audio_finish.mp3"
+        "/audio/audio_break.mp3",
+        "/audio/audio_work.mp3",
+        "/audio/audio_break.mp3",
+        "/audio/audio_finish.mp3"
     ]);
 
     // Fast forward is a no-op once finished; play restarts from round 1.

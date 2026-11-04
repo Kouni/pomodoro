@@ -125,10 +125,10 @@ test("audio: cues load eagerly, music tracks get their src on first play", () =>
     assert.equal(audios.instances.length, 7);
     const music = audios.instances.filter((a) => a.preload === "none");
     assert.deepEqual(music.map((a) => a.dataset.src).sort(), [
-        "assets/audio_cafe.mp3",
-        "assets/audio_music.mp3",
-        "assets/audio_nature.mp3",
-        "assets/audio_rain.mp3"
+        "/audio/audio_cafe.mp3",
+        "/audio/audio_music.mp3",
+        "/audio/audio_nature.mp3",
+        "/audio/audio_rain.mp3"
     ]);
     assert.ok(music.every((a) => a.src === undefined));
     const effects = audios.instances.filter((a) => !music.includes(a));
@@ -136,7 +136,7 @@ test("audio: cues load eagerly, music tracks get their src on first play", () =>
 
     api.isMusic.value = true;
     api.musicOn("rain");
-    assert.deepEqual(audios.played, ["assets/audio_rain.mp3"]);
+    assert.deepEqual(audios.played, ["/audio/audio_rain.mp3"]);
     assert.equal(music.filter((a) => a.src).length, 1);
 });
 
@@ -149,7 +149,7 @@ test("music toggle respects timing: work-only music stops during a break", (t) =
     api.musicOn("rain");
     assert.equal(api.musicPref.value, "rain");
     const rain = audios.instances.find(
-        (a) => a.dataset.src === "assets/audio_rain.mp3"
+        (a) => a.dataset.src === "/audio/audio_rain.mp3"
     );
     assert.equal(rain.paused, false);
 
@@ -165,7 +165,7 @@ test("music set to breaks-only does not start during work", (t) => {
     pressPlay();
     api.musicOn("cafe");
     const cafe = audios.instances.find(
-        (a) => a.dataset.src === "assets/audio_cafe.mp3"
+        (a) => a.dataset.src === "/audio/audio_cafe.mp3"
     );
     assert.equal(cafe.paused, true);
     api.fastForwardTimer();
@@ -279,28 +279,19 @@ test("settingsTabs tracks the active tab for aria-selected", () => {
     assert.equal(api.activeTab.value, "add");
 });
 
-test("theme is applied to the root element, main container and theme-color", () => {
-    const { api, document, panels, flushWatchers } = createApp();
-    const meta = panels['meta[name="theme-color"]'];
+test("theme is applied to the root element and theme-color", async () => {
+    const { api, document, meta, flushWatchers } = createApp();
     assert.equal(
         document.documentElement.classList.contains("light-theme"),
         false
-    );
-    assert.equal(
-        panels["#main-container"].classList.contains("dark-theme"),
-        true
     );
     assert.equal(meta.getAttribute("content"), "#121212");
 
     api.darkMode.value = false;
-    flushWatchers();
+    await flushWatchers();
     assert.equal(
         document.documentElement.classList.contains("light-theme"),
         true
-    );
-    assert.equal(
-        panels["#main-container"].classList.contains("dark-theme"),
-        false
     );
     assert.equal(meta.getAttribute("content"), "#f43147");
 });

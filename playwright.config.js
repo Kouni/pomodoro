@@ -11,6 +11,8 @@ export default defineConfig({
     use: {
         baseURL: BASE_URL,
         trace: "retain-on-failure",
+        // Deterministic requests; one PWA test opts back in.
+        serviceWorkers: "block",
         // Point at a pre-installed Chromium instead of the version-matched
         // download (sandboxes without network); unset in CI.
         launchOptions: process.env.PW_CHROMIUM_PATH
@@ -28,7 +30,7 @@ export default defineConfig({
             : [])
     ],
     webServer: {
-        command: "pnpm exec http-server -p 8080 -s -c-1",
+        command: "pnpm build && pnpm preview",
         url: `${BASE_URL}index.html`,
         reuseExistingServer: !process.env.CI
     }
