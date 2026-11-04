@@ -52,7 +52,8 @@
     "pnpm": {
         "overrides": {
             "eslint>minimatch": "^11.0.1",
-            "@eslint/config-array>minimatch": "^11.0.1"
+            "@eslint/config-array>minimatch": "^11.0.1",
+            "filelist>minimatch": "^11.0.1"
         }
     },
     "dependencies": {
