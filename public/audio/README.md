@@ -1,8 +1,10 @@
 # Audio
 
 These files are third-party recordings and are not covered by the
-repository's MIT licence. Their origin is not recorded in the repository;
-this is what the files' own metadata says:
+repository's MIT licence. They came with the original project,
+[marcelmiro/pomodoro](https://github.com/marcelmiro/pomodoro), which was
+forked with its author's permission; the clips' own licences were never
+recorded, and this is what the files' metadata says:
 
 | File               | Role            | Embedded metadata                                              | Licence           |
 | ------------------ | --------------- | -------------------------------------------------------------- | ----------------- |
