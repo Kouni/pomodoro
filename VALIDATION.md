@@ -1,144 +1,68 @@
 # 🔍 Validation Guide
 
-This project includes automated validation scripts to ensure all functionality works correctly.
-
 ## Automated Tests
 
 ```bash
-pnpm test           # unit tests for the timer, settings and persistence logic
-pnpm run test:e2e   # Playwright browser tests (first run: pnpm exec playwright install chromium)
-# Real-timer e2e tests open index.html?minute=3 (a one-minute round lasts 3 s);
+pnpm test           # unit tests for the composables (node:test, Node >= 26.13)
+pnpm run test:e2e   # Playwright browser tests against the production build
+                    # first run: pnpm exec playwright install chromium
+# Real-timer e2e tests open /?minute=3 (a one-minute round lasts 3 s);
 # the scale only works on localhost/127.0.0.1, the deployed site ignores it.
 ```
 
-Both run in CI (`.github/workflows/ci.yml`) on Node 26 (`.nvmrc`).
+Both run in CI (`.github/workflows/ci.yml`, Chromium + Firefox + WebKit) on
+Node 26 (`.nvmrc`). `pnpm run test:e2e` builds `dist/` and serves it with
+`vite preview` on port 8080 by itself.
 
 ## Quick Validation
 
-Run the validation script to check core functionality:
-
 ```bash
-# Using pnpm
-pnpm run validate
-
-# Or directly
-./validate-simple.sh
+pnpm run validate   # or ./validate-simple.sh
 ```
 
-## What Gets Validated
-
-### ✅ File Structure
-
-- Required files existence (package.json, index.html, index.js, etc.)
-- Assets directory and key files
-- Configuration files (ESLint, Prettier)
-
-### ✅ Dependencies
-
-- pnpm availability
-- Node modules installation status
-- Development dependencies
-
-### ✅ Code Quality
-
-- ESLint validation (no errors)
-- Prettier formatting check
-- Function presence verification
-
-### ✅ Bug Fixes
-
-- Notification fix validation
-- Debug statement removal
-- Core functionality checks
+Checks that the entry files exist (`index.html`, `vite.config.js`,
+`src/main.js`, `src/App.vue`, `src/styles/main.scss`), that `pnpm lint`,
+`prettier --check .` and `pnpm build` pass, and that `src/` has no
+`console.*` statements.
 
 ## Manual Testing
 
-After automated validation, manually test:
-
-1. **Start the application**
-
-    ```bash
-    pnpm run dev
-    ```
-
-2. **Test Core Features**
-    - ⏰ Timer functionality (start/pause/reset)
-    - 🔔 Notifications (enable in settings)
-    - 🎵 Audio playback
-    - 📝 Todo list management
-    - ⚙️ Settings panel
-    - 🌙 Dark mode toggle
-
-3. **Test Scenarios**
-    - Complete a short work session
-    - Complete a break session
-    - Add/remove todo items
-    - Toggle various settings
+1. `pnpm dev` and open the printed URL (service worker is off in dev).
+2. `pnpm build && pnpm preview` and open http://localhost:8080 to test the
+   production build with the service worker, the install prompt and offline
+   reload.
+3. Features: timer (play / pause / reset / fast forward), four-round session
+   with short and long breaks, infinite mode, auto-start toggles, to-do list
+   (add / tick / remove, eight-task cap), settings tabs, light mode, music
+   with volume, notifications (allow the permission prompt first).
+4. Background tab: start a round, switch tabs for a minute, come back; the
+   remaining time must match the wall clock and the cue must have played.
 
 ## Development Commands
 
 ```bash
-# Development server
-pnpm run dev        # Start with auto-open browser
-
-# Styles (index.css is generated from index.scss; commit both)
-pnpm run build:css
-
-# Code quality
-pnpm run lint       # Check and fix code issues
-pnpm run format     # Format code with Prettier
-pnpm run check      # Run both lint and format
-
-# Tests
-pnpm test           # Unit tests (node:test, Node >= 26.13)
-pnpm run test:e2e   # Playwright end-to-end + axe (Chromium)
-pnpm run validate   # Legacy quick file/lint check
-
-# Production server
-pnpm run serve      # Start server without auto-open
+pnpm dev            # Vite dev server with hot reload
+pnpm build          # production build into dist/
+pnpm preview        # serve dist/ on http://localhost:8080
+pnpm lint           # ESLint (flat config, eslint-plugin-vue)
+pnpm run format     # Prettier --write .
+pnpm test           # unit tests
+pnpm run test:e2e   # Playwright
+pnpm run validate   # quick file / lint / build check
 ```
 
 ## Troubleshooting
 
-### Dependencies Issues
-
-If validation fails due to missing dependencies:
-
-```bash
-pnpm install
-```
-
-### Code Quality Issues
-
-If ESLint or Prettier issues are found:
-
-```bash
-pnpm run check
-```
-
-### Notification Issues
-
-If notifications don't work:
-
-1. Check browser notification permissions
-2. Ensure notification toggle is enabled in settings
-3. Test with a short timer (1-2 minutes)
-
-### Server Issues
-
-If development server won't start:
-
-1. Check if port 3000 is available
-2. Try alternative port: `pnpm run serve` (port 8080)
-3. Check for conflicting processes
-
-## Continuous Validation
-
-Run validation:
-
-- Before making changes
-- After implementing features
-- Before committing code
-- When debugging issues
-
-This ensures consistent quality and functionality across all changes.
+- **Missing dependencies**: `pnpm install` (the lockfile is authoritative,
+  CI uses `--frozen-lockfile`).
+- **Lint or format failures**: `pnpm lint` shows the rule; `pnpm run format`
+  fixes formatting.
+- **Notifications do not appear**: allow the permission in the browser, turn
+  the toggle on in the settings panel, and test with a one-minute round. On
+  the production build they are shown through the service worker, so they
+  also work while the tab is in the background.
+- **Port 8080 busy**: `vite preview --strictPort` refuses to start; stop the
+  other process or run `pnpm exec vite preview --port 8081`.
+- **Stale build after an update**: the service worker auto-updates on the
+  next load; in DevTools → Application → Service Workers use "Update" or
+  "Unregister" to force it.
