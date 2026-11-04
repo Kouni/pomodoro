@@ -1,6 +1,7 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # Quick sanity check for a fresh checkout. The real tests are
 # `pnpm test` (unit) and `pnpm run test:e2e` (browser).
+cd "$(dirname "$0")/.." || exit 1
 
 PASS=0
 FAIL=0

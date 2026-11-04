@@ -1,19 +1,12 @@
 # Dependencies
 node_modules/
 
-# Minified files
-*.min.js
-*.min.css
-
-# Assets
-assets/
-
 # Generated files
-*.map
 dist/
 dev-dist/
 pnpm-lock.yaml
+
+# Binary assets and third-party files copied as-is
 public/fonts/
 public/audio/
 public/icons/
-

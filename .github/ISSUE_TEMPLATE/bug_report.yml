@@ -1,0 +1,34 @@
+name: Bug report
+description: Something does not work as expected
+labels: [bug]
+body:
+    - type: textarea
+      id: what
+      attributes:
+          label: What happened?
+          description: What did you do, what did you expect, what happened instead?
+      validations:
+          required: true
+    - type: textarea
+      id: steps
+      attributes:
+          label: Steps to reproduce
+          placeholder: |
+              1. Open https://tomato.kouni.io
+              2. Add a task and press play
+              3. Switch tabs for two minutes
+      validations:
+          required: true
+    - type: input
+      id: browser
+      attributes:
+          label: Browser and OS
+          placeholder: Chrome 153 on macOS 26, installed as a PWA
+      validations:
+          required: true
+    - type: textarea
+      id: console
+      attributes:
+          label: Console output
+          description: Anything from DevTools → Console, if relevant.
+          render: text

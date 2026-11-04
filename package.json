@@ -1,8 +1,8 @@
 {
     "name": "pomodoro-timer",
     "version": "1.0.0",
+    "private": true,
     "description": "A modern Pomodoro Timer web application with task management and productivity features",
-    "main": "src/main.js",
     "type": "module",
     "scripts": {
         "dev": "vite",
@@ -10,7 +10,7 @@
         "preview": "vite preview --host 127.0.0.1 --port 8080 --strictPort",
         "lint": "eslint src tests public/sw-notify.js eslint.config.js playwright.config.js vite.config.js",
         "format": "prettier --write .",
-        "validate": "./validate-simple.sh",
+        "validate": "scripts/validate.sh",
         "test": "node --test \"tests/unit/**/*.test.js\"",
         "test:e2e": "playwright test"
     },
@@ -24,6 +24,14 @@
     "packageManager": "pnpm@10.28.0",
     "author": "Kouni",
     "license": "MIT",
+    "homepage": "https://tomato.kouni.io",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/Kouni/pomodoro.git"
+    },
+    "bugs": {
+        "url": "https://github.com/Kouni/pomodoro/issues"
+    },
     "devDependencies": {
         "@eslint/js": "^10.0.1",
         "@playwright/test": "1.64.1",
@@ -47,7 +55,7 @@
     ],
     "engines": {
         "node": ">=26.13.0 <27",
-        "npm": ">=8.0.0"
+        "pnpm": ">=10"
     },
     "pnpm": {
         "overrides": {

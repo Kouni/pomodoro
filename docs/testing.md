@@ -1,4 +1,4 @@
-# 🔍 Validation Guide
+# Testing and Validation
 
 ## Automated Tests
 
@@ -17,7 +17,7 @@ Node 26 (`.nvmrc`). `pnpm run test:e2e` builds `dist/` and serves it with
 ## Quick Validation
 
 ```bash
-pnpm run validate   # or ./validate-simple.sh
+pnpm run validate   # or scripts/validate.sh
 ```
 
 Checks that the entry files exist (`index.html`, `vite.config.js`,
