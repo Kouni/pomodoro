@@ -143,6 +143,10 @@ test("with auto-start breaks off the break waits for play", async ({
     await expect(
         page.getByRole("button", { name: "Start timer" })
     ).toBeVisible();
+    await expect(page.getByRole("status")).toHaveText(
+        "Auto-start breaks is off. Press play to start the break."
+    );
+    await expect(page).toHaveTitle("😴 ⏸️ Paused - Pomodoro Timer");
     await app.tick(5000);
     expect(await app.timer()).toBe("01:00");
 
@@ -176,4 +180,39 @@ test("infinite mode toggled from the checkbox keeps alternating work and breaks"
     await expect(
         page.getByRole("button", { name: "Pause timer" })
     ).toBeVisible();
+});
+
+test("the empty-to-do guard blocks only the start of a session", async ({
+    page,
+    app
+}) => {
+    await shortSession(app);
+    await app.openSettings();
+    await app.settingsTab("More settings");
+    await page
+        .getByLabel("Don't start auto-pomodoro if to-do list is empty")
+        .check();
+    await app.closeSettings();
+    await expect(page.getByRole("status")).toHaveText(
+        "The to-do list is empty. Add a task to start a pomodoro."
+    );
+    await app.playButton.click();
+    await expect(page.locator(".title h1")).toBeVisible();
+    await expect(
+        page.getByRole("button", { name: "Start timer" })
+    ).toBeVisible();
+
+    await app.openTodo();
+    await app.addTask("ship it");
+    await app.closeTodo();
+    await expect(page.getByRole("status")).toHaveCount(0);
+    await app.playButton.click();
+    await expect(page.locator(".title h2").first()).toHaveText("Focus on work");
+    await app.tick(60_000);
+    await app.tick(60_000);
+    await expect(page.locator(".title h2").first()).toHaveText("Focus on work");
+    await expect(
+        page.getByRole("button", { name: "Pause timer" })
+    ).toBeVisible();
+    expect(await app.timer()).toBe("01:00");
 });

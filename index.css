@@ -253,6 +253,17 @@ body {
     margin: 0 auto;
     text-align: center;
 }
+#main-container #timer-container #svg-container .waiting {
+    position: absolute;
+    top: 72%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 66%;
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.3;
+    opacity: 0.8;
+}
 #main-container #timer-container #svg-container h2 {
     position: absolute;
     top: 50%;

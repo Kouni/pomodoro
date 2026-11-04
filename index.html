@@ -107,6 +107,9 @@
                                 >:{{ timerFormat(seconds) }}</small
                             >
                         </h2>
+                        <p class="waiting" v-if="waitingReason" role="status">
+                            {{ waitingReason }}
+                        </p>
                     </div>
                     <div id="rounds-container" v-show="!infinite">
                         <ul>

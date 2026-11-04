@@ -505,3 +505,13 @@ Chromium／Firefox 全綠，WebKit 的 smoke 測試失敗：Safari 在 `Audio` �
 ### 14.7 分支清理
 
 所有 commit 以 fast-forward 併入 `main` 後，`chore/health-check` 已從遠端與本機刪除；`claude/trusting-ramanujan-rbf2fe` 是本次 session 的工作分支（內容等於舊的 `main`），未動。
+
+### 14.8 結案：「第二輪停著」＝ 清單空的 auto-start 守門員
+
+使用者回報停住時按鈕是 ▶、Auto-start pomodoros 開、待辦清單空：這是「Don't start auto-pomodoro if To Do List is empty」開關生效。原本的語意是「清單空時，每一個後續番茄鐘都不自動開始」，一個 4 輪 session 會在第二個番茄鐘無聲停住，畫面除了 ▶ 之外沒有任何提示——不合理。
+
+修正（語意變更）：
+
+- 守門員只在**開始 session** 時檢查：開關開且清單空時，▶ 不會開始，並在計時器內顯示「The to-do list is empty. Add a task to start a pomodoro.」；session 一旦開始，中途不再因清單空而停下，4 輪就是 4 輪。
+- 其他 armed 狀態（Auto-start pomodoros／breaks 關）在計時器內顯示原因，分頁標題改為 ⏸️ Paused，不再被誤認為當機。
+- unit／e2e 各加三個情境；真實時鐘測試維持。

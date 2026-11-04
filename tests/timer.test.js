@@ -239,27 +239,6 @@ test("auto-start pomodoros off: work round after a break waits for play", (t) =>
     assert.equal(api.minutes.value, 1);
 });
 
-test("auto-start pomodoros honours the empty-todo guard", (t) => {
-    const { api, pressPlay } = bootShort(t, { autoTodoEmpty: true });
-    pressPlay();
-    tickSeconds(t, 61);
-    tickSeconds(t, 61);
-    assert.equal(api.currentRound.value, 3);
-    assert.equal(api.playState.value, true); // no tasks → not auto-started
-    tickSeconds(t, 5);
-    assert.equal(api.minutes.value, 1);
-    assert.equal(api.seconds.value, 0);
-
-    api.newTask.value = "Write tests";
-    api.addTask();
-    api.resetTimer();
-    pressPlay();
-    tickSeconds(t, 61);
-    tickSeconds(t, 61);
-    assert.equal(api.currentRound.value, 3);
-    assert.equal(api.playState.value, false); // task present → auto-started
-});
-
 test("infinite mode cycles rounds without finishing", (t) => {
     const { api, pressPlay } = bootShort(t);
     api.infinite.value = true;
@@ -320,4 +299,60 @@ test("a throwing audio cue does not stop the round transition", (t) => {
     tickSeconds(t, 59);
     assert.equal(api.roundName.value, "Focus on work");
     assert.equal(api.currentRound.value, 3);
+});
+
+test("the empty-to-do guard only blocks starting a session", (t) => {
+    const { api, pressPlay } = bootShort(t, { autoTodoEmpty: true });
+    pressPlay();
+    assert.equal(api.isCountdown.value, false);
+    assert.equal(api.playState.value, true);
+    assert.equal(
+        api.waitingReason.value,
+        "The to-do list is empty. Add a task to start a pomodoro."
+    );
+
+    api.newTask.value = "Write tests";
+    api.addTask();
+    assert.equal(api.waitingReason.value, "");
+    pressPlay();
+    assert.equal(api.isCountdown.value, true);
+    api.tasks.value.splice(0, 1); // list emptied mid-session
+    tickSeconds(t, 61);
+    tickSeconds(t, 61);
+    assert.equal(api.currentRound.value, 3);
+    assert.equal(api.roundName.value, "Focus on work");
+    assert.equal(api.playState.value, false); // still auto-started
+    assert.equal(api.seconds.value, 58); // 2 s into round 3
+});
+
+test("an armed break explains why it is waiting", (t) => {
+    const { api, document, pressPlay } = bootShort(t, { autoBreak: false });
+    assert.equal(api.waitingReason.value, "");
+    pressPlay();
+    assert.equal(api.waitingReason.value, "");
+    tickSeconds(t, 60);
+    assert.equal(api.roundName.value, "Take a short break");
+    assert.equal(
+        api.waitingReason.value,
+        "Auto-start breaks is off. Press play to start the break."
+    );
+    assert.equal(document.title, "😴 ⏸️ Paused - Pomodoro Timer");
+    pressPlay();
+    assert.equal(api.waitingReason.value, "");
+});
+
+test("an armed work round explains why it is waiting, a paused one does not", (t) => {
+    const { api, pressPlay } = bootShort(t, { autoPomodoro: false });
+    pressPlay();
+    tickSeconds(t, 120);
+    assert.equal(api.roundName.value, "Focus on work");
+    assert.equal(
+        api.waitingReason.value,
+        "Auto-start pomodoros is off. Press play to start."
+    );
+    pressPlay(); // starts round 3
+    assert.equal(api.waitingReason.value, "");
+    pressPlay(); // pauses it: no hint
+    assert.equal(api.isPaused.value, true);
+    assert.equal(api.waitingReason.value, "");
 });

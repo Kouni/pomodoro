@@ -189,6 +189,27 @@ const app = createApp({
             return "";
         };
 
+        // The empty-list guard only gates starting a session; a running
+        // session is never interrupted by it.
+        const startBlocked = () =>
+            autoTodoEmpty.value && tasks.value.length === 0;
+
+        // Why the timer is not running although it looks ready. Shown inside
+        // the arc so a waiting round is not mistaken for a stall.
+        const waitingReason = computed(() => {
+            if (!isCountdown.value) {
+                return startBlocked()
+                    ? "The to-do list is empty. Add a task to start a pomodoro."
+                    : "";
+            }
+            if (!playState.value || isPaused.value) {
+                return "";
+            }
+            return roundName.value === ROUND_NAMES[0]
+                ? "Auto-start pomodoros is off. Press play to start."
+                : "Auto-start breaks is off. Press play to start the break.";
+        });
+
         const shouldPlayMusic = () => {
             const isWork = roundName.value === ROUND_NAMES[0];
             return isWork
@@ -485,9 +506,7 @@ const app = createApp({
                 safely(handleMusicForBreak);
             } else {
                 // Work
-                autoStart = !autoTodoEmpty.value
-                    ? autoPomodoro.value
-                    : Object.keys(tasks.value).length > 0 && autoPomodoro.value;
+                autoStart = autoPomodoro.value;
 
                 minutes.value = workRange.value;
                 totalTime.value = workRange.value * 60;
@@ -527,10 +546,20 @@ const app = createApp({
                 safely(() => animateBar(totalTime.value * 1000 + 10));
             } else {
                 playState.value = true;
+                updatePageTitle(
+                    minutes.value,
+                    seconds.value,
+                    isWork,
+                    true,
+                    true
+                );
             }
         };
 
         const playFunc = () => {
+            if (!isCountdown.value && startBlocked()) {
+                return; // waitingReason tells the user to add a task first
+            }
             const starting = playState.value; // play icon was showing
             playState.value = !starting;
 
@@ -1093,6 +1122,7 @@ const app = createApp({
 
             // Computed
             shortRoundName,
+            waitingReason,
 
             // Utils
             timerFormat
