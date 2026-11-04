@@ -527,3 +527,7 @@ Chromium／Firefox 全綠，WebKit 的 smoke 測試失敗：Safari 在 `Audio` �
 | 轉場副作用讓 interval 消失                | unit `a throwing audio cue does not stop the round transition`                                                                                                                                                          |
 | 真實時間下的轉場                          | e2e `realclock.spec.js` ×2（Chromium／Firefox／WebKit）                                                                                                                                                                 |
 | Safari 載入時抓音樂檔                     | e2e smoke（三瀏覽器）斷言音樂元素無 `src`、無 mp3 請求                                                                                                                                                                  |
+
+### 14.10 真實時鐘測試加速
+
+真實時鐘測試原本每個 130 秒，三個瀏覽器佔 CI 六分鐘以上，再加測試就跑不完。`index.js` 加入 `MINUTE`：只有在 `localhost`／`127.0.0.1` 且 URL 帶 `?minute=N` 時，一「分鐘」才等於 N 秒；正式站固定 60（unit 測試鎖住這個 gating）。真實時鐘測試改開 `index.html?minute=3`，真實的 `setInterval`／tween／音效照常執行，三個測試（轉場與自動開始、infinite、暫停／恢復跨轉場）合計約 20 秒。

@@ -8,6 +8,16 @@ const ROUND_NAMES = [
     "Take a long break"
 ];
 const ROUND_NAMES_SHORT = ["Work", "Short break", "Long break"];
+// Seconds in a timer "minute". Only a local dev server may shorten it
+// (index.html?minute=3 makes a one-minute round last 3 s) so tests that
+// need real timers finish in seconds; the deployed site always uses 60.
+const MINUTE = (() => {
+    const local = /^(localhost|127\.0\.0\.1)$/.test(window.location.hostname);
+    const override = Number(
+        new URLSearchParams(window.location.search).get("minute")
+    );
+    return local && override > 0 ? override : 60;
+})();
 
 // Utility functions
 const timerFormat = (value) => {
@@ -493,7 +503,7 @@ const app = createApp({
                     return;
                 } else {
                     minutes.value = lBreakRange.value;
-                    totalTime.value = lBreakRange.value * 60;
+                    totalTime.value = lBreakRange.value * MINUTE;
                     roundName.value = ROUND_NAMES[2];
                     safely(handleMusicForBreak);
                 }
@@ -501,7 +511,7 @@ const app = createApp({
                 // Short break
                 autoStart = autoBreak.value;
                 minutes.value = sBreakRange.value;
-                totalTime.value = sBreakRange.value * 60;
+                totalTime.value = sBreakRange.value * MINUTE;
                 roundName.value = ROUND_NAMES[1];
                 safely(handleMusicForBreak);
             } else {
@@ -509,7 +519,7 @@ const app = createApp({
                 autoStart = autoPomodoro.value;
 
                 minutes.value = workRange.value;
-                totalTime.value = workRange.value * 60;
+                totalTime.value = workRange.value * MINUTE;
                 roundName.value = ROUND_NAMES[0];
                 safely(() => {
                     if (musicTiming.value === "breaks") {

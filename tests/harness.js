@@ -93,7 +93,8 @@ class FakePath {
 export const createApp = ({
     storage = {},
     notification,
-    reducedMotion = false
+    reducedMotion = false,
+    location = { hostname: "localhost", search: "" }
 } = {}) => {
     const localStorage = fakeStorage();
     Object.entries(storage).forEach(([k, v]) => localStorage.setItem(k, v));
@@ -134,6 +135,7 @@ export const createApp = ({
         getElementsByClassName: () => []
     };
     const window = {
+        location,
         addEventListener() {},
         focus() {},
         matchMedia: (query) => ({

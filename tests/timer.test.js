@@ -398,3 +398,23 @@ test("a four-round session runs every round even when the to-do list empties", (
         "The to-do list is empty. Add a task to start a pomodoro."
     );
 });
+
+test("?minute=N shortens rounds on a local server only", (t) => {
+    useTimers(t);
+    const fast = createApp({
+        location: { hostname: "127.0.0.1", search: "?minute=2" }
+    });
+    fast.api.workRange.value = 1;
+    fast.pressPlay();
+    tickSeconds(t, 2);
+    assert.equal(fast.api.roundName.value, "Take a short break");
+
+    const deployed = createApp({
+        location: { hostname: "tomato.kouni.io", search: "?minute=2" }
+    });
+    deployed.api.workRange.value = 1;
+    deployed.pressPlay();
+    tickSeconds(t, 2);
+    assert.equal(deployed.api.roundName.value, "Focus on work");
+    assert.equal(deployed.api.seconds.value, 58);
+});

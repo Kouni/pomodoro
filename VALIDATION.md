@@ -7,6 +7,8 @@ This project includes automated validation scripts to ensure all functionality w
 ```bash
 pnpm test           # unit tests for the timer, settings and persistence logic
 pnpm run test:e2e   # Playwright browser tests (first run: pnpm exec playwright install chromium)
+# Real-timer e2e tests open index.html?minute=3 (a one-minute round lasts 3 s);
+# the scale only works on localhost/127.0.0.1, the deployed site ignores it.
 ```
 
 Both run in CI (`.github/workflows/ci.yml`) on Node 26 (`.nvmrc`).

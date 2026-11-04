@@ -83,11 +83,11 @@ export const test = base.extend({
             playButton: page.locator("#play"),
             textarea: page.getByLabel("New task"),
 
-            async goto({ clock = true } = {}) {
+            async goto({ clock = true, query = "" } = {}) {
                 if (clock) {
                     await page.clock.install({ time: CLOCK_START });
                 }
-                await page.goto("index.html");
+                await page.goto(`index.html${query}`);
                 await expect(page.locator(".title h1")).toHaveText(
                     "Pomodoro Timer"
                 );
