@@ -612,3 +612,10 @@ CI 結果：run #16（`da357f8`）全綠，Chromium／Firefox／WebKit 各 33 �
 - `github-pages` environment 若有「僅允許 main」的 deployment branch 規則，不影響此切換（只從 `main` 部署）。
 - PWA 安裝、Wake Lock、Service Worker 通知只在 headless Chromium 以 API 層驗證（e2e `serviceWorkers: "allow"`），未在實體手機測試；Safari 的 Wake Lock 需 16.4+，Firefox 不支援 Wake Lock（靜默略過）。
 - 音樂快取 CacheFirst 以 `maxEntries: 8` 限制，四首 25–28 MB 的 mp3 全聽過一遍會佔約 110 MB 的 Cache Storage；瀏覽器配額不足時 Workbox 會略過快取，不影響播放。
+
+### 15.8 切換結果（2026-11-04）[verified unless marked]
+
+- Pages Source 改為「GitHub Actions」後，`main` fast-forward 至 `08771ea`。Deploy run #1：build job 37 秒（lint、unit、build、configure-pages、upload-pages-artifact），deploy-pages 8 秒，log「Reported success!」，environment url `http://tomato.kouni.io/`；legacy `pages-build-deployment` 未再觸發。CI run #18 全綠（3 分 52 秒），CodeQL 綠。
+- 本 session 的網路政策擋 `tomato.kouni.io`，線上頁面未能從這裡抓取；請在瀏覽器硬重新整理驗證（DevTools → Application → Service Workers 應出現 `sw.js`，Network 不應再有 unpkg 請求）。
+- CNAME：檔案在 `public/CNAME`，建置後為 `dist/CNAME` 並隨 artifact 上傳。以 Actions 發布時 GitHub 只讀 Settings → Pages 的 Custom domain 欄位，repo 內的 CNAME 檔不再有作用；deploy log 顯示 custom domain 仍在。deploy-pages 評估出的 URL 是 `http://` 而非 `https://`，請確認 Settings → Pages 的「Enforce HTTPS」有勾選。
+- Dependabot security update job 失敗（非 CI）：minimatch 5.1.9 只經 `vite-plugin-pwa → workbox-build → ejs → jake → filelist` 進入（建置期），Dependabot 無法自動升到 11.0.1。處理：pnpm override `filelist>minimatch: ^11.0.1`（filelist 只呼叫 `minimatch.match`，v11 仍有 CommonJS 入口；build 預快取維持 29 項，unit 51、e2e 33 通過）。`glob>minimatch` 覆寫到 11 也試過：glob 11 搭 minimatch 11 時 brace pattern 失效，預快取掉到 6 項，已撤回，glob 路徑維持 minimatch 10.2.6。deepmerge 4.3.1（`@rollup/plugin-node-resolve`，建置期）Dependabot 回報 `security_update_not_found`，尚無修正版，無法處理 [unverified：未查 advisory 內容]。
