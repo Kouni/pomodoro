@@ -7,7 +7,7 @@
     "scripts": {
         "dev": "vite",
         "build": "vite build",
-        "preview": "vite preview --port 8080 --strictPort",
+        "preview": "vite preview --host 127.0.0.1 --port 8080 --strictPort",
         "lint": "eslint src tests public/sw-notify.js eslint.config.js playwright.config.js vite.config.js",
         "format": "prettier --write .",
         "validate": "./validate-simple.sh",
